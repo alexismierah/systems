@@ -35,7 +35,7 @@ export default function InventoryPage() {
     price: "",
   });
 
-  // Load inventory
+  // Load inventory from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("inventory");
 
@@ -60,7 +60,7 @@ export default function InventoryPage() {
     );
   };
 
-  // Search
+  // Search inventory
   const filteredItems = useMemo(() => {
     const searchValue = search.toLowerCase().trim();
 
@@ -171,7 +171,7 @@ export default function InventoryPage() {
     closeModal();
   };
 
-  // Delete
+  // Delete inventory item
   const deleteItem = (id: string) => {
     const item = items.find((item) => item.id === id);
 
@@ -212,8 +212,8 @@ export default function InventoryPage() {
   );
 
   return (
-    <div>
-      {/* Header */}
+    <div className="font-sans font-light">
+      {/* Page Header */}
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-3">
@@ -221,12 +221,12 @@ export default function InventoryPage() {
               <Package className="h-5 w-5 text-gray-700" />
             </div>
 
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="text-2xl font-light tracking-tight">
               Inventory
             </h1>
           </div>
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm font-light text-gray-500">
             Manage your products, stock, pricing, and
             categories.
           </p>
@@ -235,7 +235,7 @@ export default function InventoryPage() {
         <button
           type="button"
           onClick={openAddModal}
-          className="flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+          className="flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-light text-white transition hover:bg-gray-800"
         >
           <Plus className="h-4 w-4" />
           Add Item
@@ -244,42 +244,46 @@ export default function InventoryPage() {
 
       {/* Statistics */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Total Products */}
         <div className="rounded-xl border bg-white p-5">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-light text-gray-500">
             Total Products
           </p>
 
-          <p className="mt-2 text-2xl font-semibold">
+          <p className="mt-2 text-2xl font-light">
             {totalProducts}
           </p>
         </div>
 
+        {/* Total Stock */}
         <div className="rounded-xl border bg-white p-5">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-light text-gray-500">
             Total Stock
           </p>
 
-          <p className="mt-2 text-2xl font-semibold">
+          <p className="mt-2 text-2xl font-light">
             {totalStock}
           </p>
         </div>
 
+        {/* Low Stock */}
         <div className="rounded-xl border bg-white p-5">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-light text-gray-500">
             Low Stock
           </p>
 
-          <p className="mt-2 text-2xl font-semibold text-red-600">
+          <p className="mt-2 text-2xl font-light text-red-600">
             {lowStock}
           </p>
         </div>
 
+        {/* Inventory Value */}
         <div className="rounded-xl border bg-white p-5">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-light text-gray-500">
             Inventory Value
           </p>
 
-          <p className="mt-2 text-2xl font-semibold">
+          <p className="mt-2 text-2xl font-light">
             ₱{inventoryValue.toLocaleString()}
           </p>
         </div>
@@ -287,18 +291,20 @@ export default function InventoryPage() {
 
       {/* Inventory Table */}
       <div className="rounded-xl border bg-white">
+        {/* Table Header */}
         <div className="flex flex-col justify-between gap-4 border-b p-4 md:flex-row md:items-center">
           <div>
-            <h2 className="font-semibold">
+            <h2 className="font-light">
               Inventory Items
             </h2>
 
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs font-light text-gray-500">
               {filteredItems.length} item
               {filteredItems.length !== 1 ? "s" : ""}
             </p>
           </div>
 
+          {/* Search */}
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
@@ -307,36 +313,37 @@ export default function InventoryPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search inventory..."
-              className="h-10 w-full rounded-lg border bg-white pl-10 pr-4 text-sm outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+              className="h-10 w-full rounded-lg border bg-white pl-10 pr-4 text-sm font-light outline-none transition placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
             />
           </div>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
+          <table className="w-full min-w-[800px] text-left text-sm font-light">
             <thead className="border-b bg-gray-50">
               <tr>
-                <th className="px-6 py-3 font-medium text-gray-500">
+                <th className="px-6 py-3 font-light text-gray-500">
                   Product
                 </th>
 
-                <th className="px-6 py-3 font-medium text-gray-500">
+                <th className="px-6 py-3 font-light text-gray-500">
                   SKU
                 </th>
 
-                <th className="px-6 py-3 font-medium text-gray-500">
+                <th className="px-6 py-3 font-light text-gray-500">
                   Category
                 </th>
 
-                <th className="px-6 py-3 font-medium text-gray-500">
+                <th className="px-6 py-3 font-light text-gray-500">
                   Stock
                 </th>
 
-                <th className="px-6 py-3 font-medium text-gray-500">
+                <th className="px-6 py-3 font-light text-gray-500">
                   Price
                 </th>
 
-                <th className="px-6 py-3 text-right font-medium text-gray-500">
+                <th className="px-6 py-3 text-right font-light text-gray-500">
                   Actions
                 </th>
               </tr>
@@ -346,48 +353,54 @@ export default function InventoryPage() {
               {filteredItems.map((item) => (
                 <tr
                   key={item.id}
-                  className="transition hover:bg-gray-50"
+                  className="font-light transition hover:bg-gray-50"
                 >
+                  {/* Product */}
                   <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-light text-gray-900">
                       {item.name}
                     </p>
                   </td>
 
-                  <td className="px-6 py-4 text-gray-500">
+                  {/* SKU */}
+                  <td className="px-6 py-4 font-light text-gray-500">
                     {item.sku}
                   </td>
 
+                  {/* Category */}
                   <td className="px-6 py-4">
-                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-light text-gray-700">
                       {item.category}
                     </span>
                   </td>
 
+                  {/* Stock */}
                   <td className="px-6 py-4">
                     <span
                       className={
                         item.quantity <= 5
-                          ? "font-medium text-red-600"
+                          ? "font-light text-red-600"
                           : item.quantity <= 10
-                            ? "font-medium text-yellow-600"
-                            : "text-gray-700"
+                            ? "font-light text-yellow-600"
+                            : "font-light text-gray-700"
                       }
                     >
                       {item.quantity}
                     </span>
 
                     {item.quantity <= 5 && (
-                      <span className="ml-2 text-xs text-red-500">
+                      <span className="ml-2 text-xs font-light text-red-500">
                         Low stock
                       </span>
                     )}
                   </td>
 
-                  <td className="px-6 py-4 font-medium text-gray-700">
+                  {/* Price */}
+                  <td className="px-6 py-4 font-light text-gray-700">
                     ₱{item.price.toLocaleString()}
                   </td>
 
+                  {/* Actions */}
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-1">
                       <button
@@ -416,6 +429,7 @@ export default function InventoryPage() {
                 </tr>
               ))}
 
+              {/* Empty State */}
               {filteredItems.length === 0 && (
                 <tr>
                   <td
@@ -424,11 +438,11 @@ export default function InventoryPage() {
                   >
                     <Package className="mx-auto h-8 w-8 text-gray-300" />
 
-                    <p className="mt-3 text-sm font-medium text-gray-700">
+                    <p className="mt-3 text-sm font-light text-gray-700">
                       No inventory found
                     </p>
 
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm font-light text-gray-500">
                       Add your first inventory item to
                       get started.
                     </p>
@@ -444,15 +458,16 @@ export default function InventoryPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl">
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b px-6 py-5">
               <div>
-                <h2 className="font-semibold text-gray-900">
+                <h2 className="font-light text-gray-900">
                   {editingItem
                     ? "Edit Inventory Item"
                     : "Add Inventory Item"}
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm font-light text-gray-500">
                   Enter the product information below.
                 </p>
               </div>
@@ -460,18 +475,20 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
+            {/* Form */}
             <form
               onSubmit={handleSubmit}
               className="space-y-4 p-6"
             >
+              {/* Product Name */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-light text-gray-900">
                   Product Name
                 </label>
 
@@ -485,12 +502,13 @@ export default function InventoryPage() {
                     })
                   }
                   placeholder="Enter product name"
-                  className="h-11 w-full rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className="h-11 w-full rounded-lg border px-3 text-sm font-light outline-none placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                 />
               </div>
 
+              {/* SKU */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-light text-gray-900">
                   SKU
                 </label>
 
@@ -504,12 +522,13 @@ export default function InventoryPage() {
                     })
                   }
                   placeholder="Enter SKU"
-                  className="h-11 w-full rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className="h-11 w-full rounded-lg border px-3 text-sm font-light outline-none placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                 />
               </div>
 
+              {/* Category */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-900">
+                <label className="mb-2 block text-sm font-light text-gray-900">
                   Category
                 </label>
 
@@ -523,13 +542,14 @@ export default function InventoryPage() {
                     })
                   }
                   placeholder="Enter category"
-                  className="h-11 w-full rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className="h-11 w-full rounded-lg border px-3 text-sm font-light outline-none placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                 />
               </div>
 
+              {/* Quantity + Price */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-light text-gray-900">
                     Quantity
                   </label>
 
@@ -544,12 +564,12 @@ export default function InventoryPage() {
                       })
                     }
                     placeholder="0"
-                    className="h-11 w-full rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                    className="h-11 w-full rounded-lg border px-3 text-sm font-light outline-none placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900">
+                  <label className="mb-2 block text-sm font-light text-gray-900">
                     Price
                   </label>
 
@@ -565,23 +585,24 @@ export default function InventoryPage() {
                       })
                     }
                     placeholder="0.00"
-                    className="h-11 w-full rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                    className="h-11 w-full rounded-lg border px-3 text-sm font-light outline-none placeholder:font-light focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
                   />
                 </div>
               </div>
 
+              {/* Buttons */}
               <div className="flex justify-end gap-3 pt-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg border px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border px-4 py-2.5 text-sm font-light text-gray-700 transition hover:bg-gray-50"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
+                  className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-light text-white transition hover:bg-gray-800"
                 >
                   {editingItem
                     ? "Save Changes"
