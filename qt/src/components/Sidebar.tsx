@@ -10,6 +10,12 @@ import {
   LogOut,
 } from "lucide-react";
 
+// Avenir is a licensed font — if you have the font files, load them with
+// next/font/local and swap this stack for that font's CSS variable.
+// This stack falls back gracefully if Avenir isn't installed on the device.
+const fontStack =
+  "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
+
 const menuItems = [
   {
     name: "Dashboard",
@@ -53,26 +59,30 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r bg-white">
+    <aside
+      className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-[#F5F6F7]"
+      style={{ fontFamily: fontStack, fontWeight: 300 }}
+    >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
+      <div className="flex h-16 items-center px-6">
         <Link
           href="/dashboard"
-          className="text-xl font-semibold tracking-tight"
+          className="text-xl text-gray-900"
+          style={{ fontWeight: 400 }}
         >
           Quotation
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
+      <nav className="flex-1 overflow-y-auto px-4 py-4">
         {/* MENU */}
         <div>
-          <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-3 px-4 text-[11px] uppercase tracking-wider text-gray-400">
             Menu
           </p>
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -81,13 +91,14 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                  className={`flex h-11 items-center gap-3 rounded-full px-4 text-sm transition ${
                     active
                       ? "bg-gray-900 text-white"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      : "text-gray-600 hover:bg-white hover:text-gray-900"
                   }`}
+                  style={{ fontWeight: active ? 500 : 400 }}
                 >
-                  <Icon className="h-[18px] w-[18px]" />
+                  <Icon className="h-4 w-4" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -97,11 +108,11 @@ export default function Sidebar() {
 
         {/* OTHERS */}
         <div className="mt-8">
-          <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-3 px-4 text-[11px] uppercase tracking-wider text-gray-400">
             Others
           </p>
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {otherItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -110,13 +121,14 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                  className={`flex h-11 items-center gap-3 rounded-full px-4 text-sm transition ${
                     active
                       ? "bg-gray-900 text-white"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      : "text-gray-600 hover:bg-white hover:text-gray-900"
                   }`}
+                  style={{ fontWeight: active ? 500 : 400 }}
                 >
-                  <Icon className="h-[18px] w-[18px]" />
+                  <Icon className="h-4 w-4" />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -126,13 +138,14 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="border-t p-4">
+      <div className="p-4">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-600"
+          className="flex h-11 w-full items-center gap-3 rounded-full border border-gray-200 bg-white px-4 text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-600"
+          style={{ fontWeight: 400 }}
         >
-          <LogOut className="h-[18px] w-[18px]" />
+          <LogOut className="h-4 w-4" />
           <span>Logout</span>
         </button>
       </div>
