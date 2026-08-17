@@ -11,17 +11,40 @@ import { Search, Settings, LogOut, ChevronDown } from "lucide-react";
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
 
+type StoredUser = {
+  name: string;
+  email: string;
+  company?: string;
+};
+
 export default function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // TODO: replace with real user/company data once auth is wired up.
-  const user = {
+  const [user, setUser] = useState<StoredUser>({
     name: "User",
     email: "hello@yourstudio.com",
     company: "RenderWonders",
-  };
+  });
+
+  // Load the signed-up user from localStorage on mount.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setUser((prev) => ({
+          ...prev,
+          name: parsed.name || prev.name,
+          email: parsed.email || prev.email,
+          company: parsed.company || prev.company,
+        }));
+      }
+    } catch {
+      // ignore malformed/missing localStorage data, keep defaults
+    }
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -35,8 +58,11 @@ export default function Header() {
 
   const handleLogout = () => {
     setOpen(false);
+    localStorage.removeItem("user");
     router.push("/auth/login");
   };
+
+  const initial = user.name.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <header
@@ -65,7 +91,7 @@ export default function Header() {
             className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-sm text-white"
             style={{ fontWeight: 500 }}
           >
-            U
+            {initial}
           </div>
 
           <div className="text-left leading-tight">
