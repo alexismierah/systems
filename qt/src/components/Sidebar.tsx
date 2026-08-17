@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Package,
   FileText,
-  Settings,
+  Files,
 } from "lucide-react";
 
 // Avenir is a licensed font — if you have the font files, load them with
@@ -35,9 +35,9 @@ const menuItems = [
 
 const otherItems = [
   {
-    name: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
+    name: "Document Template",
+    href: "/dashboard/document-template",
+    icon: Files,
   },
 ];
 
@@ -64,7 +64,7 @@ export default function Sidebar() {
           className="text-xl text-gray-900"
           style={{ fontWeight: 400 }}
         >
-          Quotation
+          QtKo
         </Link>
       </div>
 
