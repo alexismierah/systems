@@ -8,8 +8,6 @@ import {
   Trash2,
   X,
   Eye,
-  Download,
-  Loader2,
 } from "lucide-react";
 
 const fontStack =
@@ -43,9 +41,6 @@ export default function QuotationsPage() {
   const [selectedQuotation, setSelectedQuotation] =
     useState<Quotation | null>(null);
 
-  const [downloadingId, setDownloadingId] =
-    useState<string | null>(null);
-
   const [form, setForm] = useState({
     customer: "",
     email: "",
@@ -55,8 +50,7 @@ export default function QuotationsPage() {
 
   // Load quotations
   useEffect(() => {
-    const stored =
-      localStorage.getItem("quotations");
+    const stored = localStorage.getItem("quotations");
 
     if (stored) {
       try {
@@ -70,9 +64,7 @@ export default function QuotationsPage() {
   }, []);
 
   // Save quotations
-  const saveQuotations = (
-    data: Quotation[]
-  ) => {
+  const saveQuotations = (data: Quotation[]) => {
     setQuotations(data);
 
     localStorage.setItem(
@@ -81,10 +73,9 @@ export default function QuotationsPage() {
     );
   };
 
-  // Search
+  // Search quotations
   const filteredQuotations = useMemo(() => {
-    const searchValue =
-      search.toLowerCase().trim();
+    const searchValue = search.toLowerCase().trim();
 
     if (!searchValue) {
       return quotations;
@@ -119,7 +110,7 @@ export default function QuotationsPage() {
     setShowModal(true);
   };
 
-  // Close modal
+  // Close create modal
   const closeModal = () => {
     setShowModal(false);
   };
@@ -142,16 +133,12 @@ export default function QuotationsPage() {
     const total = Number(form.total);
 
     if (Number.isNaN(total)) {
-      alert(
-        "Please enter a valid total amount."
-      );
+      alert("Please enter a valid total amount.");
       return;
     }
 
     if (total < 0) {
-      alert(
-        "Total cannot be negative."
-      );
+      alert("Total cannot be negative.");
       return;
     }
 
@@ -160,12 +147,17 @@ export default function QuotationsPage() {
         .randomUUID()
         .slice(0, 8)
         .toUpperCase()}`,
+
       customer: form.customer.trim(),
+
       email: form.email.trim(),
+
       date: new Date()
         .toISOString()
         .split("T")[0],
+
       status: form.status,
+
       total,
     };
 
@@ -178,14 +170,10 @@ export default function QuotationsPage() {
   };
 
   // Delete quotation
-  const deleteQuotation = (
-    id: string
-  ) => {
-    const quotation =
-      quotations.find(
-        (quotation) =>
-          quotation.id === id
-      );
+  const deleteQuotation = (id: string) => {
+    const quotation = quotations.find(
+      (quotation) => quotation.id === id
+    );
 
     if (!quotation) {
       return;
@@ -201,277 +189,12 @@ export default function QuotationsPage() {
 
     saveQuotations(
       quotations.filter(
-        (quotation) =>
-          quotation.id !== id
+        (quotation) => quotation.id !== id
       )
     );
 
-    if (
-      selectedQuotation?.id === id
-    ) {
+    if (selectedQuotation?.id === id) {
       setSelectedQuotation(null);
-    }
-  };
-
-  // Download quotation PDF
-  const downloadQuotationPDF = async (
-    quotation: Quotation
-  ) => {
-    try {
-      setDownloadingId(quotation.id);
-
-      const { jsPDF } =
-        await import("jspdf");
-
-      const doc = new jsPDF({
-        unit: "pt",
-        format: "a4",
-      });
-
-      const pageWidth =
-        doc.internal.pageSize.getWidth();
-
-      const marginX = 48;
-
-      // Header
-      doc.setFillColor(
-        17,
-        24,
-        39
-      );
-
-      doc.rect(
-        0,
-        0,
-        pageWidth,
-        96,
-        "F"
-      );
-
-      doc.setTextColor(
-        255,
-        255,
-        255
-      );
-
-      doc.setFont(
-        "helvetica",
-        "normal"
-      );
-
-      doc.setFontSize(11);
-
-      doc.text(
-        "RenderWonders",
-        marginX,
-        40
-      );
-
-      doc.setFontSize(20);
-
-      doc.text(
-        "Quotation",
-        marginX,
-        68
-      );
-
-      doc.setFontSize(11);
-
-      doc.text(
-        quotation.id,
-        pageWidth - marginX,
-        68,
-        {
-          align: "right",
-        }
-      );
-
-      // Customer information
-      doc.setTextColor(
-        107,
-        114,
-        128
-      );
-
-      doc.setFontSize(9);
-
-      doc.text(
-        "BILLED TO",
-        marginX,
-        140
-      );
-
-      doc.text(
-        "DATE",
-        pageWidth - marginX,
-        140,
-        {
-          align: "right",
-        }
-      );
-
-      doc.setTextColor(
-        17,
-        24,
-        39
-      );
-
-      doc.setFontSize(12);
-
-      doc.text(
-        quotation.customer,
-        marginX,
-        158
-      );
-
-      doc.setFontSize(10);
-
-      doc.setTextColor(
-        75,
-        85,
-        99
-      );
-
-      doc.text(
-        quotation.email,
-        marginX,
-        174
-      );
-
-      doc.setFontSize(12);
-
-      doc.setTextColor(
-        17,
-        24,
-        39
-      );
-
-      doc.text(
-        quotation.date,
-        pageWidth - marginX,
-        158,
-        {
-          align: "right",
-        }
-      );
-
-      // Status
-      doc.setTextColor(
-        107,
-        114,
-        128
-      );
-
-      doc.setFontSize(9);
-
-      doc.text(
-        "STATUS",
-        pageWidth - marginX,
-        190,
-        {
-          align: "right",
-        }
-      );
-
-      doc.setTextColor(
-        17,
-        24,
-        39
-      );
-
-      doc.setFontSize(12);
-
-      doc.text(
-        quotation.status,
-        pageWidth - marginX,
-        208,
-        {
-          align: "right",
-        }
-      );
-
-      // Divider
-      doc.setDrawColor(
-        229,
-        231,
-        235
-      );
-
-      doc.line(
-        marginX,
-        236,
-        pageWidth - marginX,
-        236
-      );
-
-      // Total
-      doc.setTextColor(
-        107,
-        114,
-        128
-      );
-
-      doc.setFontSize(10);
-
-      doc.text(
-        "TOTAL AMOUNT",
-        marginX,
-        280
-      );
-
-      doc.setTextColor(
-        17,
-        24,
-        39
-      );
-
-      doc.setFontSize(26);
-
-      doc.text(
-        `PHP ${quotation.total.toLocaleString()}`,
-        marginX,
-        312
-      );
-
-      // Footer
-      doc.setDrawColor(
-        229,
-        231,
-        235
-      );
-
-      doc.line(
-        marginX,
-        700,
-        pageWidth - marginX,
-        700
-      );
-
-      doc.setTextColor(
-        156,
-        163,
-        175
-      );
-
-      doc.setFontSize(9);
-
-      doc.text(
-        "Generated by RenderWonders — this document is not a tax invoice.",
-        marginX,
-        720
-      );
-
-      doc.save(
-        `${quotation.id}.pdf`
-      );
-    } catch (err) {
-      console.error(err);
-
-      alert(
-        "Couldn't generate the PDF. Make sure the 'jspdf' package is installed."
-      );
-    } finally {
-      setDownloadingId(null);
     }
   };
 
@@ -495,16 +218,13 @@ export default function QuotationsPage() {
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            Create and manage customer
-            quotations.
+            Create and manage customer quotations.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={
-            openCreateModal
-          }
+          onClick={openCreateModal}
           className="flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
           style={{
             fontWeight: 500,
@@ -532,8 +252,7 @@ export default function QuotationsPage() {
             <p className="mt-1 text-xs text-gray-500">
               {filteredQuotations.length}{" "}
               quotation
-              {filteredQuotations.length !==
-              1
+              {filteredQuotations.length !== 1
                 ? "s"
                 : ""}
             </p>
@@ -547,9 +266,7 @@ export default function QuotationsPage() {
               type="search"
               value={search}
               onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
+                setSearch(e.target.value)
               }
               placeholder="Search quotations..."
               className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
@@ -559,7 +276,7 @@ export default function QuotationsPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[800px] text-left text-sm">
             <thead className="border-b border-gray-200 bg-[#FAFAFB]">
               <tr>
                 <th className="px-6 py-3 font-normal text-gray-500">
@@ -605,15 +322,11 @@ export default function QuotationsPage() {
                           fontWeight: 500,
                         }}
                       >
-                        {
-                          quotation.customer
-                        }
+                        {quotation.customer}
                       </p>
 
                       <p className="text-xs text-gray-500">
-                        {
-                          quotation.email
-                        }
+                        {quotation.email}
                       </p>
                     </td>
 
@@ -633,33 +346,11 @@ export default function QuotationsPage() {
                               quotation
                             )
                           }
-                          className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                          className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
                           title="View"
+                          aria-label={`View ${quotation.id}`}
                         >
                           <Eye className="h-4 w-4" />
-                        </button>
-
-                        {/* Download */}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            downloadQuotationPDF(
-                              quotation
-                            )
-                          }
-                          disabled={
-                            downloadingId ===
-                            quotation.id
-                          }
-                          className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
-                          title="Download PDF"
-                        >
-                          {downloadingId ===
-                          quotation.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
                         </button>
 
                         {/* Delete */}
@@ -670,8 +361,9 @@ export default function QuotationsPage() {
                               quotation.id
                             )
                           }
-                          className="rounded-full p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                          className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                           title="Delete"
+                          aria-label={`Delete ${quotation.id}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -682,8 +374,7 @@ export default function QuotationsPage() {
               )}
 
               {/* Empty State */}
-              {filteredQuotations.length ===
-                0 && (
+              {filteredQuotations.length === 0 && (
                 <tr>
                   <td
                     colSpan={4}
@@ -744,7 +435,8 @@ export default function QuotationsPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -752,39 +444,38 @@ export default function QuotationsPage() {
 
             {/* Form */}
             <form
-              onSubmit={
-                createQuotation
-              }
+              onSubmit={createQuotation}
               className="space-y-3 p-6"
             >
+              {/* Customer */}
               <input
                 type="text"
                 value={form.customer}
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    customer:
-                      e.target.value,
+                    customer: e.target.value,
                   })
                 }
                 placeholder="Customer name"
                 className="h-11 w-full rounded-full border border-gray-200 px-5 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
               />
 
+              {/* Email */}
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    email:
-                      e.target.value,
+                    email: e.target.value,
                   })
                 }
                 placeholder="customer@example.com"
                 className="h-11 w-full rounded-full border border-gray-200 px-5 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
               />
 
+              {/* Total */}
               <input
                 type="number"
                 min="0"
@@ -793,22 +484,21 @@ export default function QuotationsPage() {
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    total:
-                      e.target.value,
+                    total: e.target.value,
                   })
                 }
                 placeholder="Total amount (₱)"
                 className="h-11 w-full rounded-full border border-gray-200 px-5 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
               />
 
+              {/* Status */}
               <select
                 value={form.status}
                 onChange={(e) =>
                   setForm({
                     ...form,
                     status:
-                      e.target
-                        .value as QuotationStatus,
+                      e.target.value as QuotationStatus,
                   })
                 }
                 className="h-11 w-full rounded-full border border-gray-200 px-5 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
@@ -835,14 +525,14 @@ export default function QuotationsPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="h-11 rounded-full border border-gray-200 px-5 text-sm text-gray-700 hover:bg-gray-50"
+                  className="h-11 rounded-full border border-gray-200 px-5 text-sm text-gray-700 transition hover:bg-gray-50"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="h-11 rounded-full bg-gray-900 px-5 text-sm text-white hover:bg-black"
+                  className="h-11 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
                   style={{
                     fontWeight: 500,
                   }}
@@ -878,20 +568,17 @@ export default function QuotationsPage() {
                     fontWeight: 400,
                   }}
                 >
-                  {
-                    selectedQuotation.id
-                  }
+                  {selectedQuotation.id}
                 </h2>
               </div>
 
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedQuotation(
-                    null
-                  )
+                  setSelectedQuotation(null)
                 }
-                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -899,6 +586,7 @@ export default function QuotationsPage() {
 
             {/* Details */}
             <div className="space-y-5 p-6">
+              {/* Customer */}
               <div>
                 <p className="text-xs text-gray-500">
                   Customer
@@ -910,18 +598,15 @@ export default function QuotationsPage() {
                     fontWeight: 500,
                   }}
                 >
-                  {
-                    selectedQuotation.customer
-                  }
+                  {selectedQuotation.customer}
                 </p>
 
                 <p className="text-sm text-gray-500">
-                  {
-                    selectedQuotation.email
-                  }
+                  {selectedQuotation.email}
                 </p>
               </div>
 
+              {/* Date + Status */}
               <div className="grid grid-cols-2 gap-5">
                 <div>
                   <p className="text-xs text-gray-500">
@@ -934,9 +619,7 @@ export default function QuotationsPage() {
                       fontWeight: 500,
                     }}
                   >
-                    {
-                      selectedQuotation.date
-                    }
+                    {selectedQuotation.date}
                   </p>
                 </div>
 
@@ -951,9 +634,7 @@ export default function QuotationsPage() {
                       fontWeight: 500,
                     }}
                   >
-                    {
-                      selectedQuotation.status
-                    }
+                    {selectedQuotation.status}
                   </p>
                 </div>
               </div>
@@ -975,49 +656,19 @@ export default function QuotationsPage() {
                 </p>
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadQuotationPDF(
-                      selectedQuotation
-                    )
-                  }
-                  disabled={
-                    downloadingId ===
-                    selectedQuotation.id
-                  }
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-                >
-                  {downloadingId ===
-                  selectedQuotation.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-
-                  {downloadingId ===
-                  selectedQuotation.id
-                    ? "Preparing..."
-                    : "Download PDF"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedQuotation(
-                      null
-                    )
-                  }
-                  className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white hover:bg-black"
-                  style={{
-                    fontWeight: 500,
-                  }}
-                >
-                  Close
-                </button>
-              </div>
+              {/* Close */}
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedQuotation(null)
+                }
+                className="h-11 w-full rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
+                style={{
+                  fontWeight: 500,
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
