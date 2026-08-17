@@ -229,22 +229,6 @@ export default function InventoryPage() {
   // STATISTICS
   // --------------------------------------------------
 
-  const totalProducts = items.length;
-
-  const totalStock = items.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
-
-  const lowStock = items.filter(
-    (item) => item.quantity <= 5
-  ).length;
-
-  const inventoryValue = items.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
-
   return (
     <div
       className="min-h-full"
@@ -280,33 +264,6 @@ export default function InventoryPage() {
           <Plus className="h-4 w-4" />
           Add Item
         </button>
-      </div>
-
-      {/* =====================================================
-          STATISTICS
-      ===================================================== */}
-
-      <div className="mb-8 grid gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Products"
-          value={totalProducts}
-        />
-
-        <Stat
-          label="Total Stock"
-          value={totalStock}
-        />
-
-        <Stat
-          label="Low Stock"
-          value={lowStock}
-          warning={lowStock > 0}
-        />
-
-        <Stat
-          label="Inventory Value"
-          value={`₱${inventoryValue.toLocaleString()}`}
-        />
       </div>
 
       {/* =====================================================
@@ -561,16 +518,6 @@ export default function InventoryPage() {
                         ? "Add your first inventory item to get started."
                         : "Try changing your search or filter."}
                     </p>
-
-                    {items.length === 0 && (
-                      <button
-                        type="button"
-                        onClick={openAddModal}
-                        className="mt-5 rounded-full bg-gray-900 px-5 py-2.5 text-sm text-white transition hover:bg-black"
-                      >
-                        Add Item
-                      </button>
-                    )}
 
                   </td>
 
