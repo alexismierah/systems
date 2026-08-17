@@ -116,7 +116,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="mb-4">
           <h1
-            className="text-xl leading-tight text-gray-900"
+            className="text-2xl leading-tight text-gray-900"
             style={{ fontWeight: 400 }}
           >
             Welcome to
@@ -144,7 +144,7 @@ export default function RegisterPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
               autoComplete="name"
-              className="h-10 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
             />
           </div>
 
@@ -156,7 +156,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@yourstudio.com"
               autoComplete="email"
-              className="h-10 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
             />
           </div>
 
@@ -168,7 +168,7 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               autoComplete="new-password"
-              className="h-10 w-full rounded-full border border-gray-200 bg-white pl-11 pr-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
             />
             <button
               type="button"
@@ -192,7 +192,7 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm password"
               autoComplete="new-password"
-              className="h-10 w-full rounded-full border border-gray-200 bg-white pl-11 pr-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
             />
             <button
               type="button"
@@ -213,7 +213,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             style={{ fontWeight: 500 }}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -229,7 +229,7 @@ export default function RegisterPage() {
 
         <button
           type="button"
-          className="flex h-10 w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white text-sm text-gray-700 transition hover:bg-gray-50"
+          className="flex h-11 w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white text-sm text-gray-700 transition hover:bg-gray-50"
         >
           <GoogleIcon />
           Signup with Google
