@@ -2,8 +2,37 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+// Avenir is a licensed font — if you have the font files, load them with
+// next/font/local and swap this stack for that font's CSS variable.
+// This stack falls back gracefully if Avenir isn't installed on the device.
+const fontStack =
+  "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
+
+function GoogleIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.46 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.1A11.998 11.998 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.26A11.998 11.998 0 0 0 0 12c0 1.94.47 3.77 1.26 5.38l4.01-3.1Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.62l4.01 3.1C6.22 6.88 8.87 4.77 12 4.77Z"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,128 +91,129 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <main
+      className="flex min-h-screen items-center justify-center bg-[#F5F6F7] px-4 py-10"
+      style={{ fontFamily: fontStack, fontWeight: 300 }}
+    >
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border bg-white p-8 shadow-sm">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back
+        <div className="rounded-[28px] border border-black/5 bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] sm:p-10">
+          <p className="mb-8 text-sm text-gray-900" style={{ fontWeight: 500 }}>
+            RenderWonders
+          </p>
+
+          <div className="mb-8">
+            <h1
+              className="text-[28px] leading-tight text-gray-900"
+              style={{ fontWeight: 400 }}
+            >
+              Welcome back to
+              <br />
+              RenderWonders
             </h1>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-3 text-sm text-gray-500">
               Sign in to your account to continue.
             </p>
           </div>
 
           {error && (
-            <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-gray-900"
-              >
-                Email
-              </label>
-
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="hello@yourstudio.com"
                 autoComplete="email"
-                className="h-11 w-full rounded-lg border px-3 text-sm outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                className="h-12 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#14B8C6] focus:ring-2 focus:ring-[#14B8C6]/20"
               />
             </div>
 
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-900"
-                >
-                  Password
-                </label>
-
-                <button
-                  type="button"
-                  className="text-sm text-gray-500 hover:text-gray-900"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className="h-11 w-full rounded-lg border px-3 pr-11 text-sm outline-none transition focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900"
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2">
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) =>
-                  setRememberMe(e.target.checked)
-                }
-                className="h-4 w-4 rounded border-gray-300"
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete="current-password"
+                className="h-12 w-full rounded-full border border-gray-200 bg-white pl-11 pr-11 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#14B8C6] focus:ring-2 focus:ring-[#14B8C6]/20"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
 
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 text-sm text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#14B8C6] focus:ring-[#14B8C6]"
+                />
                 Remember me
-              </span>
-            </label>
+              </label>
+
+              <button
+                type="button"
+                className="text-sm text-[#0FA0AF] hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gray-900 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#14B8C6] text-sm text-white transition hover:bg-[#0FA0AF] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ fontWeight: 500 }}
             >
-              {loading && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
-
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs text-gray-400">or</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <button
+            type="button"
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-gray-200 bg-white text-sm text-gray-700 transition hover:bg-gray-50"
+          >
+            <GoogleIcon />
+            Sign in with Google
+          </button>
+
+          <div className="mt-8 text-center">
             <p className="text-sm text-gray-500">
               Don't have an account?{" "}
               <Link
                 href="/auth/register"
-                className="font-medium text-gray-900 hover:underline"
+                className="text-[#0FA0AF] hover:underline"
+                style={{ fontWeight: 500 }}
               >
-                Create an account
+                Sign up
               </Link>
             </p>
           </div>

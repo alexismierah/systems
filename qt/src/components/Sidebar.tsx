@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
   FileText,
   Settings,
+  LogOut,
 } from "lucide-react";
 
 const menuItems = [
@@ -37,6 +38,7 @@ const otherItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
@@ -44,6 +46,10 @@ export default function Sidebar() {
     }
 
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = () => {
+    router.push("/auth/login");
   };
 
   return (
@@ -58,6 +64,7 @@ export default function Sidebar() {
         </Link>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-6">
         {/* MENU */}
         <div>
@@ -81,7 +88,6 @@ export default function Sidebar() {
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px]" />
-
                   <span>{item.name}</span>
                 </Link>
               );
@@ -111,7 +117,6 @@ export default function Sidebar() {
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px]" />
-
                   <span>{item.name}</span>
                 </Link>
               );
@@ -119,6 +124,18 @@ export default function Sidebar() {
           </div>
         </div>
       </nav>
+
+      {/* Logout */}
+      <div className="border-t p-4">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-600"
+        >
+          <LogOut className="h-[18px] w-[18px]" />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }
