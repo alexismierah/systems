@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import {
   Package,
   FileText,
-  ArrowRight,
+  ArrowUpRight,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   return (
@@ -15,8 +15,8 @@ export default function DashboardPage() {
           Dashboard
         </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your inventory and quotations.
+        <p className="mt-2 text-sm text-gray-500">
+          Welcome to your quotation management system.
         </p>
       </div>
 
@@ -27,19 +27,18 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div className="rounded-lg bg-gray-100 p-3">
-              <Package className="h-6 w-6" />
+              <Package className="h-5 w-5" />
             </div>
 
-            <ArrowRight className="h-5 w-5 text-gray-400 transition group-hover:translate-x-1 group-hover:text-gray-900" />
+            <ArrowUpRight className="h-5 w-5 text-gray-400 transition group-hover:text-gray-900" />
           </div>
 
-          <h2 className="mt-5 text-lg font-semibold">
+          <h2 className="mt-5 font-semibold">
             Inventory
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Manage products, stock quantities, pricing, and
-            categories.
+            Manage your products and stock.
           </p>
         </Link>
 
@@ -49,18 +48,18 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div className="rounded-lg bg-gray-100 p-3">
-              <FileText className="h-6 w-6" />
+              <FileText className="h-5 w-5" />
             </div>
 
-            <ArrowRight className="h-5 w-5 text-gray-400 transition group-hover:translate-x-1 group-hover:text-gray-900" />
+            <ArrowUpRight className="h-5 w-5 text-gray-400 transition group-hover:text-gray-900" />
           </div>
 
-          <h2 className="mt-5 text-lg font-semibold">
+          <h2 className="mt-5 font-semibold">
             Quotations
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Create, manage, and track customer quotations.
+            Create and manage customer quotations.
           </p>
         </Link>
       </div>

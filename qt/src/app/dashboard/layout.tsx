@@ -1,5 +1,5 @@
-import { Header } from "@/components/Header";
-import { Sidebar } from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 
 export default function DashboardLayout({
   children,
@@ -10,13 +10,11 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
 
-      <div className="lg:pl-64">
-        <Header />
+      <Header />
 
-        <main className="p-6">
-          {children}
-        </main>
-      </div>
+      <main className="ml-64 pt-16">
+        <div className="p-6">{children}</div>
+      </main>
     </div>
   );
 }

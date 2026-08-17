@@ -6,10 +6,10 @@ import {
   LayoutDashboard,
   Package,
   FileText,
-  LogOut,
+  Settings,
 } from "lucide-react";
 
-const navigation = [
+const menuItems = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -27,60 +27,98 @@ const navigation = [
   },
 ];
 
-export function Sidebar() {
+const otherItems = [
+  {
+    name: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+];
+
+export default function Sidebar() {
   const pathname = usePathname();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.location.href = "/auth/login";
+  const isActive = (href: string) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+
+    return pathname.startsWith(href);
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r bg-white lg:flex">
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r bg-white">
+      {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
         <Link
           href="/dashboard"
           className="text-xl font-semibold tracking-tight"
         >
-          YourApp
+          Quotation
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
-          const Icon = item.icon;
+      <nav className="flex-1 overflow-y-auto px-4 py-6">
+        {/* MENU */}
+        <div>
+          <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            Menu
+          </p>
 
-          const isActive =
-            pathname === item.href ||
-            pathname.startsWith(`${item.href}/`);
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                    active
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" />
 
-              {item.name}
-            </Link>
-          );
-        })}
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* OTHERS */}
+        <div className="mt-8">
+          <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            Others
+          </p>
+
+          <div className="space-y-1">
+            {otherItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                    active
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" />
+
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </nav>
-
-      <div className="border-t p-4">
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600"
-        >
-          <LogOut className="h-5 w-5" />
-          Sign out
-        </button>
-      </div>
     </aside>
   );
 }
