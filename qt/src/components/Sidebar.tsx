@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
   FileText,
   Settings,
-  LogOut,
 } from "lucide-react";
 
 // Avenir is a licensed font — if you have the font files, load them with
@@ -44,7 +43,6 @@ const otherItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
@@ -52,10 +50,6 @@ export default function Sidebar() {
     }
 
     return pathname.startsWith(href);
-  };
-
-  const handleLogout = () => {
-    router.push("/auth/login");
   };
 
   return (
@@ -136,19 +130,6 @@ export default function Sidebar() {
           </div>
         </div>
       </nav>
-
-      {/* Logout */}
-      <div className="p-4">
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex h-11 w-full items-center gap-3 rounded-full border border-gray-200 bg-white px-4 text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-600"
-          style={{ fontWeight: 400 }}
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Logout</span>
-        </button>
-      </div>
     </aside>
   );
 }
