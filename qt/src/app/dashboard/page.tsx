@@ -1,271 +1,726 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  Package,
+  FileText,
   Eye,
   Pencil,
   Trash2,
   X,
   Loader2,
-  FileText,
 } from "lucide-react";
 
-// Avenir is a licensed font — if you have the font files, load them with
-// next/font/local and swap this stack for that font's CSS variable.
-// This stack falls back gracefully if Avenir isn't installed on the device.
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
 
-type Quotation = {
+type InventoryItem = {
   id: string;
-  number: string;
-  customer: string;
-  date: string;
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  price: number;
 };
 
-const emptyDraft: Omit<Quotation, "id"> = {
-  number: "",
-  customer: "",
-  date: new Date().toISOString().slice(0, 10),
+type QuotationStatus =
+  | "Draft"
+  | "Pending"
+  | "Approved"
+  | "Rejected";
+
+type Quotation = {
+  id: string;
+  customer: string;
+  email: string;
+  date: string;
+  status: QuotationStatus;
+  total: number;
 };
 
 export default function DashboardPage() {
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [inventory, setInventory] = useState<
+    InventoryItem[]
+  >([]);
 
-  const [viewing, setViewing] = useState<Quotation | null>(null);
-  const [editing, setEditing] = useState<Quotation | null>(null);
-  const [draft, setDraft] = useState<Omit<Quotation, "id">>(emptyDraft);
-  const [deleting, setDeleting] = useState<Quotation | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [quotations, setQuotations] = useState<
+    Quotation[]
+  >([]);
 
-  const openEdit = (q: Quotation) => {
-    setDraft({
-      number: q.number,
-      customer: q.customer,
-      date: q.date,
-    });
-    setEditing(q);
-  };
+  const [viewQuotation, setViewQuotation] =
+    useState<Quotation | null>(null);
 
-  const closeModals = () => {
-    setViewing(null);
-    setEditing(null);
-    setDeleting(null);
-  };
+  const [editingInventory, setEditingInventory] =
+    useState<InventoryItem | null>(null);
 
-  const handleSave = async () => {
-    if (!editing) return;
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
+  const [deletingInventory, setDeletingInventory] =
+    useState<InventoryItem | null>(null);
 
-    setQuotations((prev) =>
-      prev.map((q) => (q.id === editing.id ? { ...q, ...draft } : q))
+  const [deletingQuotation, setDeletingQuotation] =
+    useState<Quotation | null>(null);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  // Load inventory and quotations
+  useEffect(() => {
+    const loadData = () => {
+      // Inventory
+      const storedInventory =
+        localStorage.getItem("inventory");
+
+      if (storedInventory) {
+        try {
+          setInventory(
+            JSON.parse(storedInventory)
+          );
+        } catch {
+          setInventory([]);
+        }
+      }
+
+      // Quotations
+      const storedQuotations =
+        localStorage.getItem("quotations");
+
+      if (storedQuotations) {
+        try {
+          setQuotations(
+            JSON.parse(storedQuotations)
+          );
+        } catch {
+          setQuotations([]);
+        }
+      }
+    };
+
+    loadData();
+
+    // Refresh dashboard when localStorage changes
+    const handleStorage = () => {
+      loadData();
+    };
+
+    window.addEventListener(
+      "storage",
+      handleStorage
     );
 
+    return () => {
+      window.removeEventListener(
+        "storage",
+        handleStorage
+      );
+    };
+  }, []);
+
+  const hasActivities =
+    inventory.length > 0 ||
+    quotations.length > 0;
+
+  // -----------------------------
+  // Delete Inventory
+  // -----------------------------
+
+  const deleteInventory = async () => {
+    if (!deletingInventory) return;
+
+    setSaving(true);
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 300)
+    );
+
+    const updatedInventory =
+      inventory.filter(
+        (item) =>
+          item.id !== deletingInventory.id
+      );
+
+    setInventory(updatedInventory);
+
+    localStorage.setItem(
+      "inventory",
+      JSON.stringify(updatedInventory)
+    );
+
+    setDeletingInventory(null);
     setSaving(false);
-    closeModals();
   };
 
-  const handleDelete = async () => {
-    if (!deleting) return;
+  // -----------------------------
+  // Delete Quotation
+  // -----------------------------
+
+  const deleteQuotation = async () => {
+    if (!deletingQuotation) return;
+
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setQuotations((prev) => prev.filter((q) => q.id !== deleting.id));
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 300)
+    );
+
+    const updatedQuotations =
+      quotations.filter(
+        (quotation) =>
+          quotation.id !==
+          deletingQuotation.id
+      );
+
+    setQuotations(updatedQuotations);
+
+    localStorage.setItem(
+      "quotations",
+      JSON.stringify(updatedQuotations)
+    );
+
+    setDeletingQuotation(null);
     setSaving(false);
-    closeModals();
   };
 
   return (
-    <div style={{ fontFamily: fontStack, fontWeight: 300 }}>
-      <div className="mb-8">
-        <h1
-          className="text-2xl text-gray-900"
-          style={{ fontWeight: 400 }}
-        >
-          Recent quotations
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
-          View, edit, and manage your latest quotations.
-        </p>
-      </div>
+    <div
+      style={{
+        fontFamily: fontStack,
+        fontWeight: 300,
+      }}
+    >
+      {/* Empty Dashboard */}
+      {!hasActivities && (
+        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <h1
+            className="text-xl text-gray-900"
+            style={{
+              fontWeight: 400,
+            }}
+          >
+            No Activities yet
+          </h1>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        {quotations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-            <div className="rounded-full bg-gray-100 p-3">
-              <FileText className="h-5 w-5 text-gray-400" />
-            </div>
-            <p className="text-sm text-gray-500">
-              No quotations yet.
+          <p className="mt-2 text-sm text-gray-500">
+            Add inventory or create quotation
+          </p>
+        </div>
+      )}
+
+      {/* Dashboard with Activities */}
+      {hasActivities && (
+        <>
+          {/* Header */}
+          <div className="mb-8">
+            <h1
+              className="text-2xl text-gray-900"
+              style={{
+                fontWeight: 400,
+              }}
+            >
+              Recent Activity
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Manage your recent inventory
+              and quotations.
             </p>
           </div>
-        ) : (
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-xs uppercase tracking-wide text-gray-400">
-                <th className="px-6 py-3 font-medium">Quotation</th>
-                <th className="px-6 py-3 font-medium">Customer</th>
-                <th className="px-6 py-3 font-medium">Date</th>
-                <th className="px-6 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {quotations.map((q) => (
-                <tr
-                  key={q.id}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60"
-                >
-                  <td className="px-6 py-4 text-gray-900" style={{ fontWeight: 500 }}>
-                    {q.number}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">{q.customer}</td>
-                  <td className="px-6 py-4 text-gray-500">
-                    {new Date(q.date).toLocaleDateString("en-PH", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setViewing(q)}
-                        aria-label={`View ${q.number}`}
-                        className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(q)}
-                        aria-label={`Edit ${q.number}`}
-                        className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleting(q)}
-                        aria-label={`Delete ${q.number}`}
-                        className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
 
-      {/* View modal */}
-      {viewing && (
-        <Modal onClose={closeModals} title="Quotation details">
-          <dl className="space-y-3 text-sm">
-            <Row label="Quotation #" value={viewing.number} />
-            <Row label="Customer" value={viewing.customer} />
-            <Row
-              label="Date"
-              value={new Date(viewing.date).toLocaleDateString("en-PH", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+          {/* Inventory */}
+          {inventory.length > 0 && (
+            <section className="mb-8">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-full bg-gray-100 p-2">
+                  <Package className="h-4 w-4 text-gray-500" />
+                </div>
+
+                <h2
+                  className="text-lg text-gray-900"
+                  style={{
+                    fontWeight: 400,
+                  }}
+                >
+                  Inventory
+                </h2>
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] text-left text-sm">
+                    <thead className="border-b border-gray-100 bg-[#FAFAFB]">
+                      <tr>
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Product
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          SKU
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Category
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Stock
+                        </th>
+
+                        <th className="px-6 py-3 text-right font-normal text-gray-500">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-100">
+                      {inventory
+                        .slice(0, 5)
+                        .map((item) => (
+                          <tr
+                            key={item.id}
+                            className="transition hover:bg-gray-50"
+                          >
+                            <td className="px-6 py-4">
+                              <p
+                                className="text-gray-900"
+                                style={{
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {item.name}
+                              </p>
+                            </td>
+
+                            <td className="px-6 py-4 text-gray-500">
+                              {item.sku}
+                            </td>
+
+                            <td className="px-6 py-4 text-gray-500">
+                              {item.category}
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <span
+                                className={
+                                  item.quantity <=
+                                  5
+                                    ? "text-red-600"
+                                    : "text-gray-600"
+                                }
+                                style={{
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {
+                                  item.quantity
+                                }
+                              </span>
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setEditingInventory(
+                                      item
+                                    )
+                                  }
+                                  className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                                  title="Edit"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setDeletingInventory(
+                                      item
+                                    )
+                                  }
+                                  className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Quotations */}
+          {quotations.length > 0 && (
+            <section>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-full bg-gray-100 p-2">
+                  <FileText className="h-4 w-4 text-gray-500" />
+                </div>
+
+                <h2
+                  className="text-lg text-gray-900"
+                  style={{
+                    fontWeight: 400,
+                  }}
+                >
+                  Quotations
+                </h2>
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] text-left text-sm">
+                    <thead className="border-b border-gray-100 bg-[#FAFAFB]">
+                      <tr>
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Quote #
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Customer
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Date
+                        </th>
+
+                        <th className="px-6 py-3 font-normal text-gray-500">
+                          Status
+                        </th>
+
+                        <th className="px-6 py-3 text-right font-normal text-gray-500">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-100">
+                      {quotations
+                        .slice(0, 5)
+                        .map((quotation) => (
+                          <tr
+                            key={
+                              quotation.id
+                            }
+                            className="transition hover:bg-gray-50"
+                          >
+                            <td
+                              className="px-6 py-4 text-gray-900"
+                              style={{
+                                fontWeight: 500,
+                              }}
+                            >
+                              {
+                                quotation.id
+                              }
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <p
+                                className="text-gray-900"
+                                style={{
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {
+                                  quotation.customer
+                                }
+                              </p>
+
+                              <p className="text-xs text-gray-500">
+                                {
+                                  quotation.email
+                                }
+                              </p>
+                            </td>
+
+                            <td className="px-6 py-4 text-gray-500">
+                              {new Date(
+                                quotation.date
+                              ).toLocaleDateString(
+                                "en-PH",
+                                {
+                                  month:
+                                    "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <span className="text-gray-600">
+                                {
+                                  quotation.status
+                                }
+                              </span>
+                            </td>
+
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setViewQuotation(
+                                      quotation
+                                    )
+                                  }
+                                  className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                                  title="View"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setDeletingQuotation(
+                                      quotation
+                                    )
+                                  }
+                                  className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* View Quotation */}
+      {viewQuotation && (
+        <Modal
+          title="Quotation details"
+          onClose={() =>
+            setViewQuotation(null)
+          }
+        >
+          <div className="space-y-4">
+            <InfoRow
+              label="Quotation #"
+              value={viewQuotation.id}
             />
-          </dl>
+
+            <InfoRow
+              label="Customer"
+              value={
+                viewQuotation.customer
+              }
+            />
+
+            <InfoRow
+              label="Email"
+              value={
+                viewQuotation.email
+              }
+            />
+
+            <InfoRow
+              label="Date"
+              value={new Date(
+                viewQuotation.date
+              ).toLocaleDateString(
+                "en-PH",
+                {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                }
+              )}
+            />
+
+            <InfoRow
+              label="Status"
+              value={
+                viewQuotation.status
+              }
+            />
+
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs text-gray-500">
+                Total
+              </p>
+
+              <p
+                className="mt-1 text-xl text-gray-900"
+                style={{
+                  fontWeight: 400,
+                }}
+              >
+                ₱
+                {viewQuotation.total.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={closeModals}
-            className="mt-6 flex h-11 w-full items-center justify-center rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
-            style={{ fontWeight: 500 }}
+            onClick={() =>
+              setViewQuotation(null)
+            }
+            className="mt-6 h-11 w-full rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
+            style={{
+              fontWeight: 500,
+            }}
           >
             Close
           </button>
         </Modal>
       )}
 
-      {/* Edit modal */}
-      {editing && (
-        <Modal onClose={closeModals} title="Edit quotation">
-          <div className="space-y-3">
-            <Field label="Quotation #">
-              <input
-                value={draft.number}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, number: e.target.value }))
-                }
-                placeholder="QT-2026-015"
-                className="h-11 w-full rounded-full border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-              />
-            </Field>
+      {/* Edit Inventory */}
+      {editingInventory && (
+        <EditInventoryModal
+          item={editingInventory}
+          onClose={() =>
+            setEditingInventory(null)
+          }
+          onSave={(updatedItem) => {
+            const updatedInventory =
+              inventory.map((item) =>
+                item.id ===
+                updatedItem.id
+                  ? updatedItem
+                  : item
+              );
 
-            <Field label="Customer">
-              <input
-                value={draft.customer}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, customer: e.target.value }))
-                }
-                placeholder="Customer name"
-                className="h-11 w-full rounded-full border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-              />
-            </Field>
+            setInventory(
+              updatedInventory
+            );
 
-            <Field label="Date">
-              <input
-                type="date"
-                value={draft.date}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, date: e.target.value }))
-                }
-                className="h-11 w-full rounded-full border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-              />
-            </Field>
-          </div>
+            localStorage.setItem(
+              "inventory",
+              JSON.stringify(
+                updatedInventory
+              )
+            );
 
-          <button
-            type="button"
-            disabled={saving || !draft.number.trim() || !draft.customer.trim()}
-            onClick={handleSave}
-            className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ fontWeight: 500 }}
-          >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {saving ? "Saving..." : "Save changes"}
-          </button>
-        </Modal>
+            setEditingInventory(null);
+          }}
+        />
       )}
 
-      {/* Delete confirm modal */}
-      {deleting && (
-        <Modal onClose={closeModals} title="Delete quotation">
+      {/* Delete Inventory */}
+      {deletingInventory && (
+        <Modal
+          title="Delete inventory"
+          onClose={() =>
+            setDeletingInventory(null)
+          }
+        >
           <p className="text-sm text-gray-500">
-            Are you sure you want to delete{" "}
-            <span className="text-gray-900" style={{ fontWeight: 500 }}>
-              {deleting.number}
+            Are you sure you want to
+            delete{" "}
+            <span
+              className="text-gray-900"
+              style={{
+                fontWeight: 500,
+              }}
+            >
+              {
+                deletingInventory.name
+              }
             </span>
-            ? This can't be undone.
+            ?
           </p>
 
           <div className="mt-6 flex gap-3">
             <button
               type="button"
-              onClick={closeModals}
-              className="flex h-11 flex-1 items-center justify-center rounded-full border border-gray-200 bg-white text-sm text-gray-700 transition hover:bg-gray-50"
+              onClick={() =>
+                setDeletingInventory(
+                  null
+                )
+              }
+              className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
+
             <button
               type="button"
               disabled={saving}
-              onClick={handleDelete}
-              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-red-600 text-sm text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ fontWeight: 500 }}
+              onClick={
+                deleteInventory
+              }
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-red-600 text-sm text-white hover:bg-red-700 disabled:opacity-60"
             >
-              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              {saving ? "Deleting..." : "Delete"}
+              {saving && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+
+              {saving
+                ? "Deleting..."
+                : "Delete"}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Quotation */}
+      {deletingQuotation && (
+        <Modal
+          title="Delete quotation"
+          onClose={() =>
+            setDeletingQuotation(
+              null
+            )
+          }
+        >
+          <p className="text-sm text-gray-500">
+            Are you sure you want to
+            delete{" "}
+            <span
+              className="text-gray-900"
+              style={{
+                fontWeight: 500,
+              }}
+            >
+              {deletingQuotation.id}
+            </span>
+            ?
+          </p>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                setDeletingQuotation(
+                  null
+                )
+              }
+              className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              disabled={saving}
+              onClick={
+                deleteQuotation
+              }
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-red-600 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              {saving && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+
+              {saving
+                ? "Deleting..."
+                : "Delete"}
             </button>
           </div>
         </Modal>
@@ -273,6 +728,10 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+/* ----------------------------- */
+/* Modal */
+/* ----------------------------- */
 
 function Modal({
   title,
@@ -286,57 +745,246 @@ function Modal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
-      style={{ fontFamily: fontStack, fontWeight: 300 }}
+      style={{
+        fontFamily: fontStack,
+        fontWeight: 300,
+      }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg"
-        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+        onClick={(event) =>
+          event.stopPropagation()
+        }
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-5 flex items-center justify-between">
           <h2
             className="text-lg text-gray-900"
-            style={{ fontWeight: 400 }}
+            style={{
+              fontWeight: 400,
+            }}
           >
             {title}
           </h2>
+
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
+
         {children}
       </div>
     </div>
   );
 }
 
-function Field({
+/* ----------------------------- */
+/* Info Row */
+/* ----------------------------- */
+
+function InfoRow({
   label,
-  children,
+  value,
 }: {
   label: string;
-  children: React.ReactNode;
+  value: React.ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs text-gray-500">{label}</span>
-      {children}
-    </label>
+    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+      <span className="text-sm text-gray-500">
+        {label}
+      </span>
+
+      <span
+        className="text-sm text-gray-900"
+        style={{
+          fontWeight: 500,
+        }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+/* ----------------------------- */
+/* Edit Inventory */
+/* ----------------------------- */
+
+function EditInventoryModal({
+  item,
+  onClose,
+  onSave,
+}: {
+  item: InventoryItem;
+  onClose: () => void;
+  onSave: (
+    item: InventoryItem
+  ) => void;
+}) {
+  const [name, setName] =
+    useState(item.name);
+
+  const [sku, setSku] =
+    useState(item.sku);
+
+  const [category, setCategory] =
+    useState(item.category);
+
+  const [quantity, setQuantity] =
+    useState(String(item.quantity));
+
+  const [price, setPrice] =
+    useState(String(item.price));
+
+  const handleSave = () => {
+    if (
+      !name.trim() ||
+      !sku.trim() ||
+      !category.trim()
+    ) {
+      alert(
+        "Please fill in all fields."
+      );
+      return;
+    }
+
+    const newQuantity =
+      Number(quantity);
+
+    const newPrice =
+      Number(price);
+
+    if (
+      Number.isNaN(newQuantity) ||
+      Number.isNaN(newPrice)
+    ) {
+      alert(
+        "Please enter valid numbers."
+      );
+      return;
+    }
+
+    if (
+      newQuantity < 0 ||
+      newPrice < 0
+    ) {
+      alert(
+        "Values cannot be negative."
+      );
+      return;
+    }
+
+    onSave({
+      ...item,
+      name: name.trim(),
+      sku: sku.trim(),
+      category: category.trim(),
+      quantity: newQuantity,
+      price: newPrice,
+    });
+  };
+
   return (
-    <div className="flex items-center justify-between border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-      <dt className="text-gray-500">{label}</dt>
-      <dd className="text-gray-900" style={{ fontWeight: 500 }}>
-        {value}
-      </dd>
-    </div>
+    <Modal
+      title="Edit inventory"
+      onClose={onClose}
+    >
+      <div className="space-y-3">
+        <Input
+          label="Product name"
+          value={name}
+          onChange={setName}
+        />
+
+        <Input
+          label="SKU"
+          value={sku}
+          onChange={setSku}
+        />
+
+        <Input
+          label="Category"
+          value={category}
+          onChange={setCategory}
+        />
+
+        <Input
+          label="Quantity"
+          type="number"
+          value={quantity}
+          onChange={setQuantity}
+        />
+
+        <Input
+          label="Price"
+          type="number"
+          value={price}
+          onChange={setPrice}
+        />
+      </div>
+
+      <div className="mt-6 flex gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSave}
+          className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white hover:bg-black"
+          style={{
+            fontWeight: 500,
+          }}
+        >
+          Save changes
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+/* ----------------------------- */
+/* Input */
+/* ----------------------------- */
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (
+    value: string
+  ) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs text-gray-500">
+        {label}
+      </span>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(event) =>
+          onChange(
+            event.target.value
+          )
+        }
+        className="h-11 w-full rounded-full border border-gray-200 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+      />
+    </label>
   );
 }
