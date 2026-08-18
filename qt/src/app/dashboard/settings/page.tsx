@@ -1,152 +1,235 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  User,
-  Bell,
-  Palette,
-  Save,
-} from "lucide-react";
+import { User, Building2, Save, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+const fontStack =
+  "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
+
+type CompanyInfo = {
+  companyName: string;
+  streetAddress: string;
+  cityStateZip: string;
+  website: string;
+  phone: string;
+  fax: string;
+  preparedBy: string;
+};
+
+const emptyCompany: CompanyInfo = {
+  companyName: "",
+  streetAddress: "",
+  cityStateZip: "",
+  website: "",
+  phone: "",
+  fax: "",
+  preparedBy: "",
+};
+
+const inputClass =
+  "h-11 w-full rounded-full border border-gray-200 bg-gray-50 px-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10";
+
+function getInitials(name: string, email: string) {
+  const source = name.trim() || email.trim();
+  if (!source) return "?";
+
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "company">(
+    "profile"
+  );
+
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  const [darkMode, setDarkMode] = useState(false);
-  const [emailNotifications, setEmailNotifications] =
-    useState(true);
+  const [company, setCompany] = useState<CompanyInfo>(emptyCompany);
 
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
+  // Load the signed-in user's profile from Supabase (not localStorage,
+  // which nothing in the app ever populated).
   useEffect(() => {
-    const stored = localStorage.getItem("settings");
+    const supabase = createClient();
 
-    if (!stored) {
-      return;
+    async function loadProfile() {
+      setLoadingProfile(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setLoadingProfile(false);
+        return;
+      }
+
+      setUserId(user.id);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      setName(
+        profile?.full_name ||
+          (user.user_metadata?.full_name as string | undefined) ||
+          ""
+      );
+      setEmail(profile?.email || user.email || "");
+
+      setLoadingProfile(false);
     }
 
-    try {
-      const settings = JSON.parse(stored);
+    loadProfile();
 
-      setName(settings.name || "");
-      setEmail(settings.email || "");
-      setDarkMode(settings.darkMode || false);
-      setEmailNotifications(
-        settings.emailNotifications ?? true
-      );
-    } catch {
-      // Ignore invalid settings
+    // Company / letterhead info used on the quotation template.
+    const storedCompany = localStorage.getItem("company-profile");
+    if (storedCompany) {
+      try {
+        setCompany({ ...emptyCompany, ...JSON.parse(storedCompany) });
+      } catch {
+        setCompany(emptyCompany);
+      }
     }
   }, []);
 
-  const saveSettings = () => {
-    localStorage.setItem(
-      "settings",
-      JSON.stringify({
-        name,
-        email,
-        darkMode,
-        emailNotifications,
-      })
-    );
+  const saveSettings = async () => {
+    setError("");
+    setSaving(true);
 
-    setSaved(true);
+    try {
+      if (activeTab === "profile") {
+        if (!name.trim()) {
+          setError("Please enter your name.");
+          return;
+        }
 
-    setTimeout(() => {
-      setSaved(false);
-    }, 2000);
+        const supabase = createClient();
+
+        if (userId) {
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({ full_name: name.trim() })
+            .eq("id", userId);
+
+          if (updateError) {
+            setError(updateError.message);
+            return;
+          }
+
+          // Keep auth metadata in sync too (used as a fallback everywhere
+          // else in the app that reads the display name).
+          await supabase.auth.updateUser({
+            data: { full_name: name.trim() },
+          });
+        }
+
+        // Let the Header (and anywhere else) know to refresh the name.
+        window.dispatchEvent(new Event("profile-updated"));
+      }
+
+      if (activeTab === "company") {
+        localStorage.setItem("company-profile", JSON.stringify(company));
+        window.dispatchEvent(new Event("company-updated"));
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const tabs = [
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
-    },
-    {
-      id: "appearance",
-      label: "Appearance",
-      icon: Palette,
-    },
-    {
-      id: "notifications",
-      label: "Notifications",
-      icon: Bell,
-    },
+    { id: "profile" as const, label: "Profile", icon: User },
+    { id: "company" as const, label: "Company", icon: Building2 },
   ];
 
   return (
-    <div>
+    <div style={{ fontFamily: fontStack, fontWeight: 300 }}>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Settings
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
         <p className="mt-2 text-sm text-gray-500">
-          Manage your account and application preferences.
+          Manage your account and company details.
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        {/* Settings Tabs */}
-        <div className="w-full lg:w-56">
-          <div className="rounded-xl border bg-white p-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
+      <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white p-1.5">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
 
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() =>
-                    setActiveTab(tab.id)
-                  }
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                    activeTab === tab.id
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex h-9 items-center gap-2 rounded-full px-4 text-sm transition ${
+                active
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              }`}
+              style={{ fontWeight: active ? 500 : 400 }}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+        {activeTab === "profile" && (
+          <div className="p-6">
+            {loadingProfile ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading profile...
+              </div>
+            ) : (
+              <div className="max-w-xl">
+                <div className="mb-6 flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gray-900 text-sm font-medium text-white">
+                    {getInitials(name, email)}
+                  </div>
 
-        {/* Content */}
-        <div className="flex-1">
-          <div className="rounded-xl border bg-white">
-            {activeTab === "profile" && (
-              <>
-                <div className="border-b px-6 py-5">
-                  <h2 className="font-semibold">
-                    Profile
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Update your account information.
-                  </p>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {name || "Your name"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {email || "No email on file"}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-5 p-6">
+                <div className="space-y-5">
                   <div>
                     <label className="mb-2 block text-sm font-medium">
-                      Full Name
+                      Full name
                     </label>
 
                     <input
                       type="text"
                       value={name}
-                      onChange={(e) =>
-                        setName(e.target.value)
-                      }
+                      onChange={(e) => setName(e.target.value)}
                       placeholder="Enter your name"
-                      className="h-11 w-full max-w-xl rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                      className={inputClass}
                     />
                   </div>
 
@@ -158,135 +241,167 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) =>
-                        setEmail(e.target.value)
-                      }
-                      placeholder="Enter your email"
-                      className="h-11 w-full max-w-xl rounded-lg border px-3 text-sm outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                      disabled
+                      className="h-11 w-full cursor-not-allowed rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-500 outline-none"
                     />
+
+                    <p className="mt-2 text-xs text-gray-400">
+                      Your email is tied to your account login and
+                      can&apos;t be changed here.
+                    </p>
                   </div>
                 </div>
-              </>
+              </div>
             )}
+          </div>
+        )}
 
-            {activeTab === "appearance" && (
-              <>
-                <div className="border-b px-6 py-5">
-                  <h2 className="font-semibold">
-                    Appearance
-                  </h2>
+        {activeTab === "company" && (
+          <div className="p-6">
+            <p className="mb-5 max-w-xl text-sm text-gray-500">
+              This information appears on the letterhead of every quotation
+              you create.
+            </p>
 
-                  <p className="mt-1 text-sm text-gray-500">
-                    Customize the appearance of the
-                    application.
-                  </p>
-                </div>
+            <div className="grid max-w-xl gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-2 block text-sm font-medium">
+                  Company name
+                </label>
+                <input
+                  type="text"
+                  value={company.companyName}
+                  onChange={(e) =>
+                    setCompany({ ...company, companyName: e.target.value })
+                  }
+                  placeholder="Company name"
+                  className={inputClass}
+                />
+              </div>
 
-                <div className="p-6">
-                  <div className="flex max-w-xl items-center justify-between rounded-lg border p-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Dark Mode
-                      </p>
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Street address
+                </label>
+                <input
+                  type="text"
+                  value={company.streetAddress}
+                  onChange={(e) =>
+                    setCompany({
+                      ...company,
+                      streetAddress: e.target.value,
+                    })
+                  }
+                  placeholder="Street address"
+                  className={inputClass}
+                />
+              </div>
 
-                      <p className="mt-1 text-xs text-gray-500">
-                        Use a darker appearance.
-                      </p>
-                    </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  City, ST ZIP
+                </label>
+                <input
+                  type="text"
+                  value={company.cityStateZip}
+                  onChange={(e) =>
+                    setCompany({
+                      ...company,
+                      cityStateZip: e.target.value,
+                    })
+                  }
+                  placeholder="City, ST ZIP"
+                  className={inputClass}
+                />
+              </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDarkMode(!darkMode)
-                      }
-                      className={`relative h-6 w-11 rounded-full ${
-                        darkMode
-                          ? "bg-gray-900"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-                          darkMode
-                            ? "left-6"
-                            : "left-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Website
+                </label>
+                <input
+                  type="text"
+                  value={company.website}
+                  onChange={(e) =>
+                    setCompany({ ...company, website: e.target.value })
+                  }
+                  placeholder="somedomain.com"
+                  className={inputClass}
+                />
+              </div>
 
-            {activeTab === "notifications" && (
-              <>
-                <div className="border-b px-6 py-5">
-                  <h2 className="font-semibold">
-                    Notifications
-                  </h2>
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={company.phone}
+                  onChange={(e) =>
+                    setCompany({ ...company, phone: e.target.value })
+                  }
+                  placeholder="000-000-0000"
+                  className={inputClass}
+                />
+              </div>
 
-                  <p className="mt-1 text-sm text-gray-500">
-                    Manage your notification preferences.
-                  </p>
-                </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Fax</label>
+                <input
+                  type="text"
+                  value={company.fax}
+                  onChange={(e) =>
+                    setCompany({ ...company, fax: e.target.value })
+                  }
+                  placeholder="000-000-0000"
+                  className={inputClass}
+                />
+              </div>
 
-                <div className="p-6">
-                  <div className="flex max-w-xl items-center justify-between rounded-lg border p-4">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Email Notifications
-                      </p>
-
-                      <p className="mt-1 text-xs text-gray-500">
-                        Receive notifications through email.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEmailNotifications(
-                          !emailNotifications
-                        )
-                      }
-                      className={`relative h-6 w-11 rounded-full ${
-                        emailNotifications
-                          ? "bg-gray-900"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-                          emailNotifications
-                            ? "left-6"
-                            : "left-1"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex items-center justify-between border-t px-6 py-4">
-              {saved ? (
-                <p className="text-sm text-green-600">
-                  Settings saved successfully.
-                </p>
-              ) : (
-                <div />
-              )}
-
-              <button
-                type="button"
-                onClick={saveSettings}
-                className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
-              >
-                <Save className="h-4 w-4" />
-                Save Changes
-              </button>
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Prepared by (salesperson)
+                </label>
+                <input
+                  type="text"
+                  value={company.preparedBy}
+                  onChange={(e) =>
+                    setCompany({
+                      ...company,
+                      preparedBy: e.target.value,
+                    })
+                  }
+                  placeholder="Salesperson name"
+                  className={inputClass}
+                />
+              </div>
             </div>
           </div>
+        )}
+
+        <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+          {error ? (
+            <p className="text-sm text-red-600">{error}</p>
+          ) : saved ? (
+            <p className="text-sm text-green-600">Settings saved.</p>
+          ) : (
+            <div />
+          )}
+
+          <button
+            type="button"
+            onClick={saveSettings}
+            disabled={saving || loadingProfile}
+            className="flex h-11 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ fontWeight: 500 }}
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {saving ? "Saving..." : "Save changes"}
+          </button>
         </div>
       </div>
     </div>

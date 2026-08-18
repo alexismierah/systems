@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Search, Settings, LogOut, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // Avenir is a licensed font — if you have the font files, load them with
 // next/font/local and swap this stack for that font's CSS variable.
@@ -11,134 +9,123 @@ import { Search, Settings, LogOut, ChevronDown } from "lucide-react";
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
 
-type StoredUser = {
+type HeaderUser = {
   name: string;
   email: string;
-  company?: string;
+  company: string;
 };
 
-export default function Header() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+// Company name lives in local business settings (see Settings > Company),
+// separate from the authenticated identity which comes from Supabase.
+function readCompanyName(): string {
+  try {
+    const raw = localStorage.getItem("company-profile");
+    if (!raw) return "";
+    const parsed = JSON.parse(raw);
+    return parsed?.companyName || "";
+  } catch {
+    return "";
+  }
+}
 
-  const [user, setUser] = useState<StoredUser>({
+export default function Header() {
+  const [user, setUser] = useState<HeaderUser>({
     name: "User",
-    email: "hello@yourstudio.com",
-    company: "RenderWonders",
+    email: "",
+    company: "",
   });
 
-  // Load the signed-up user from localStorage on mount.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setUser((prev) => ({
-          ...prev,
-          name: parsed.name || prev.name,
-          email: parsed.email || prev.email,
-          company: parsed.company || prev.company,
-        }));
-      }
-    } catch {
-      // ignore malformed/missing localStorage data, keep defaults
-    }
-  }, []);
+  const [loading, setLoading] = useState(true);
 
+  // Load the signed-in user from Supabase (auth identity + profiles table)
+  // instead of localStorage, which nothing in the app ever writes to.
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    const supabase = createClient();
+    let active = true;
 
-  const handleLogout = () => {
-    setOpen(false);
-    localStorage.removeItem("user");
-    router.push("/auth/login");
-  };
+    async function loadUser() {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (!active) return;
+
+      if (!authUser) {
+        setUser({ name: "User", email: "", company: readCompanyName() });
+        setLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      if (!active) return;
+
+      const name =
+        profile?.full_name?.trim() ||
+        (authUser.user_metadata?.full_name as string | undefined)?.trim() ||
+        authUser.email?.split("@")[0] ||
+        "User";
+
+      setUser({
+        name,
+        email: profile?.email || authUser.email || "",
+        company: readCompanyName(),
+      });
+
+      setLoading(false);
+    }
+
+    loadUser();
+
+    // Keep the header in sync when Settings saves a profile/company change.
+    const handleProfileUpdated = () => loadUser();
+    window.addEventListener("profile-updated", handleProfileUpdated);
+    window.addEventListener("company-updated", handleProfileUpdated);
+
+    // Keep the header in sync with sign-in / sign-out events.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
+    });
+
+    return () => {
+      active = false;
+      window.removeEventListener("profile-updated", handleProfileUpdated);
+      window.removeEventListener("company-updated", handleProfileUpdated);
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const initial = user.name.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <header
-      className="fixed left-64 right-0 top-0 z-30 flex h-16 items-center justify-between bg-[#F5F6F7] px-6"
+      className="fixed left-64 right-0 top-0 z-30 flex h-16 items-center justify-end bg-[#F5F6F7] px-6"
       style={{ fontFamily: fontStack, fontWeight: 300 }}
     >
-      {/* Search */}
-      <div className="relative w-full max-w-xl">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-        <input
-          type="search"
-          placeholder="Search..."
-          className="h-10 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-        />
-      </div>
-
       {/* Profile */}
-      <div className="relative ml-6" ref={menuRef}>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-3 rounded-full border border-transparent py-1 pl-1 pr-3 transition hover:border-gray-200 hover:bg-white"
+      <div className="flex items-center gap-3 rounded-full py-1 pl-1 pr-3">
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-sm text-white"
+          style={{ fontWeight: 500 }}
         >
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-sm text-white"
-            style={{ fontWeight: 500 }}
-          >
-            {initial}
-          </div>
+          {loading ? "" : initial}
+        </div>
 
-          <div className="text-left leading-tight">
-            <p className="text-sm text-gray-900" style={{ fontWeight: 500 }}>
-              {user.name}
-            </p>
+        <div className="text-left leading-tight">
+          <p className="text-sm text-gray-900" style={{ fontWeight: 500 }}>
+            {loading ? "Loading..." : user.name}
+          </p>
+          {user.company && (
             <p className="text-xs text-gray-500">{user.company}</p>
-          </div>
-
-          <ChevronDown
-            className={`h-4 w-4 text-gray-400 transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-
-        {open && (
-          <div className="absolute right-0 top-[calc(100%+8px)] w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">
-            <div className="px-3 py-2">
-              <p className="text-sm text-gray-900" style={{ fontWeight: 500 }}>
-                {user.name}
-              </p>
-              <p className="truncate text-xs text-gray-500">{user.email}</p>
-            </div>
-
-            <div className="my-1 h-px bg-gray-100" />
-
-            <Link
-              href="/dashboard/settings"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-gray-600 transition hover:bg-red-50 hover:text-red-600"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );
-}
+} 
