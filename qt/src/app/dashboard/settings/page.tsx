@@ -36,7 +36,8 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  const [company, setCompany] = useState<CompanyInfo>(emptyCompany);
+  const [company, setCompany] =
+    useState<CompanyInfo>(emptyCompany);
 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -48,7 +49,10 @@ export default function SettingsPage() {
   const [profileError, setProfileError] = useState("");
   const [companyError, setCompanyError] = useState("");
 
-  // Load profile
+  // =========================
+  // LOAD PROFILE + COMPANY
+  // =========================
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -85,8 +89,8 @@ export default function SettingsPage() {
 
     loadProfile();
 
-    // Load company information
-    const storedCompany = localStorage.getItem("company-profile");
+    const storedCompany =
+      localStorage.getItem("company-profile");
 
     if (storedCompany) {
       try {
@@ -100,7 +104,10 @@ export default function SettingsPage() {
     }
   }, []);
 
-  // Save Profile
+  // =========================
+  // SAVE PROFILE
+  // =========================
+
   const saveProfile = async () => {
     setProfileError("");
     setProfileSaved(false);
@@ -115,19 +122,18 @@ export default function SettingsPage() {
       const supabase = createClient();
 
       if (userId) {
-        const { error: updateError } = await supabase
+        const { error } = await supabase
           .from("profiles")
           .update({
             full_name: name.trim(),
           })
           .eq("id", userId);
 
-        if (updateError) {
-          setProfileError(updateError.message);
+        if (error) {
+          setProfileError(error.message);
           return;
         }
 
-        // Keep auth metadata in sync
         await supabase.auth.updateUser({
           data: {
             full_name: name.trim(),
@@ -135,8 +141,9 @@ export default function SettingsPage() {
         });
       }
 
-      // Notify sidebar
-      window.dispatchEvent(new Event("profile-updated"));
+      window.dispatchEvent(
+        new Event("profile-updated")
+      );
 
       setProfileSaved(true);
 
@@ -148,7 +155,10 @@ export default function SettingsPage() {
     }
   };
 
-  // Save Company
+  // =========================
+  // SAVE COMPANY
+  // =========================
+
   const saveCompany = async () => {
     setCompanyError("");
     setCompanySaved(false);
@@ -160,8 +170,9 @@ export default function SettingsPage() {
         JSON.stringify(company)
       );
 
-      // Notify sidebar
-      window.dispatchEvent(new Event("company-updated"));
+      window.dispatchEvent(
+        new Event("company-updated")
+      );
 
       setCompanySaved(true);
 
@@ -169,7 +180,9 @@ export default function SettingsPage() {
         setCompanySaved(false);
       }, 2000);
     } catch {
-      setCompanyError("Unable to save company information.");
+      setCompanyError(
+        "Unable to save company information."
+      );
     } finally {
       setSavingCompany(false);
     }
@@ -182,23 +195,29 @@ export default function SettingsPage() {
         fontWeight: 300,
       }}
     >
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">
+      {/* ========================= */}
+      {/* PAGE HEADER */}
+      {/* ========================= */}
+
+      <div className="mb-6">
+        <h1
+          className="text-2xl text-gray-900"
+          style={{ fontWeight: 500 }}
+        >
           Settings
         </h1>
 
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500">
           Manage your account and company details.
         </p>
       </div>
 
       {/* ========================= */}
-      {/* PROFILE */}
+      {/* PROFILE PANEL */}
       {/* ========================= */}
 
       <section className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        {/* Section Header */}
+        {/* Panel Header */}
         <div className="border-b border-gray-200 px-6 py-5">
           <h2
             className="text-base text-gray-900"
@@ -212,7 +231,7 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Profile Content */}
+        {/* Panel Content */}
         <div className="p-6">
           {loadingProfile ? (
             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -220,65 +239,69 @@ export default function SettingsPage() {
               Loading profile...
             </div>
           ) : (
-            <div className="max-w-xl">
-              <div className="space-y-5">
-                {/* Full Name */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium">
-                    Full name
-                  </label>
+            <div className="max-w-2xl space-y-5">
+              {/* Full Name */}
+              <div>
+                <label className="mb-2 block text-sm text-gray-700">
+                  Full name
+                </label>
 
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                    className={inputClass}
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) =>
+                    setName(e.target.value)
+                  }
+                  placeholder="Enter your name"
+                  className={inputClass}
+                />
+              </div>
 
-                {/* Email */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium">
-                    Email
-                  </label>
+              {/* Email */}
+              <div>
+                <label className="mb-2 block text-sm text-gray-700">
+                  Email
+                </label>
 
-                  <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="h-11 w-full cursor-not-allowed rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-500 outline-none"
-                  />
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="h-11 w-full cursor-not-allowed rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-500 outline-none"
+                />
 
-                  <p className="mt-2 text-xs text-gray-400">
-                    Your email is tied to your account login and
-                    can&apos;t be changed here.
-                  </p>
-                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  Your email is tied to your account login
+                  and can&apos;t be changed here.
+                </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Profile Footer */}
+        {/* Panel Footer */}
         <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
-          {profileError ? (
-            <p className="text-sm text-red-600">
-              {profileError}
-            </p>
-          ) : profileSaved ? (
-            <p className="text-sm text-green-600">
-              Profile saved.
-            </p>
-          ) : (
-            <div />
-          )}
+          <div>
+            {profileError && (
+              <p className="text-sm text-red-600">
+                {profileError}
+              </p>
+            )}
+
+            {profileSaved && (
+              <p className="text-sm text-green-600">
+                Profile saved.
+              </p>
+            )}
+          </div>
 
           <button
             type="button"
             onClick={saveProfile}
-            disabled={savingProfile || loadingProfile}
-            className="flex h-11 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={
+              savingProfile || loadingProfile
+            }
+            className="flex h-10 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             style={{ fontWeight: 500 }}
           >
             {savingProfile ? (
@@ -287,17 +310,19 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" />
             )}
 
-            {savingProfile ? "Saving..." : "Save changes"}
+            {savingProfile
+              ? "Saving..."
+              : "Save changes"}
           </button>
         </div>
       </section>
 
       {/* ========================= */}
-      {/* COMPANY */}
+      {/* COMPANY PANEL */}
       {/* ========================= */}
 
       <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        {/* Section Header */}
+        {/* Panel Header */}
         <div className="border-b border-gray-200 px-6 py-5">
           <h2
             className="text-base text-gray-900"
@@ -307,16 +332,17 @@ export default function SettingsPage() {
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Manage the company information displayed on your quotations.
+            Manage the company information displayed on
+            your quotations.
           </p>
         </div>
 
-        {/* Company Content */}
+        {/* Panel Content */}
         <div className="p-6">
           <div className="grid max-w-3xl gap-5 sm:grid-cols-2">
             {/* Company Name */}
             <div className="sm:col-span-2">
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 Company name
               </label>
 
@@ -336,7 +362,7 @@ export default function SettingsPage() {
 
             {/* Street Address */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 Street address
               </label>
 
@@ -356,7 +382,7 @@ export default function SettingsPage() {
 
             {/* City / State / ZIP */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 City, ST ZIP
               </label>
 
@@ -376,7 +402,7 @@ export default function SettingsPage() {
 
             {/* Website */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 Website
               </label>
 
@@ -396,7 +422,7 @@ export default function SettingsPage() {
 
             {/* Phone */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 Phone
               </label>
 
@@ -416,7 +442,7 @@ export default function SettingsPage() {
 
             {/* Fax */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-sm text-gray-700">
                 Fax
               </label>
 
@@ -436,8 +462,8 @@ export default function SettingsPage() {
 
             {/* Prepared By */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
-                Prepared by (salesperson)
+              <label className="mb-2 block text-sm text-gray-700">
+                Prepared by
               </label>
 
               <input
@@ -456,25 +482,27 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Company Footer */}
+        {/* Panel Footer */}
         <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
-          {companyError ? (
-            <p className="text-sm text-red-600">
-              {companyError}
-            </p>
-          ) : companySaved ? (
-            <p className="text-sm text-green-600">
-              Company information saved.
-            </p>
-          ) : (
-            <div />
-          )}
+          <div>
+            {companyError && (
+              <p className="text-sm text-red-600">
+                {companyError}
+              </p>
+            )}
+
+            {companySaved && (
+              <p className="text-sm text-green-600">
+                Company information saved.
+              </p>
+            )}
+          </div>
 
           <button
             type="button"
             onClick={saveCompany}
             disabled={savingCompany}
-            className="flex h-11 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-10 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             style={{ fontWeight: 500 }}
           >
             {savingCompany ? (
@@ -483,7 +511,9 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" />
             )}
 
-            {savingCompany ? "Saving..." : "Save changes"}
+            {savingCompany
+              ? "Saving..."
+              : "Save changes"}
           </button>
         </div>
       </section>
