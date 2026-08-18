@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Eye,
@@ -8,8 +8,9 @@ import {
   Loader2,
   ArrowRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthRedirectUrl, getRememberMe, setRememberMe, startOAuthRedirect } from "@/lib/auth";
 
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
@@ -37,15 +38,25 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMeState] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setRememberMeState(getRememberMe());
+
+    const authError = searchParams.get("error");
+    if (authError) {
+      setError(authError);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +76,8 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
+      setRememberMe(rememberMe);
+
       const supabase = createClient();
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -75,17 +88,6 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
         return;
-      }
-
-      /*
-       * Remember me is handled by Supabase's browser session
-       * storage/cookies. The checkbox is kept for your UI.
-       */
-
-      if (rememberMe) {
-        localStorage.setItem("rememberMe", "true");
-      } else {
-        localStorage.removeItem("rememberMe");
       }
 
       router.push("/dashboard");
@@ -102,21 +104,16 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      const supabase = createClient();
+      setRememberMe(rememberMe);
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+      const result = await startOAuthRedirect("google", "/dashboard");
 
-      if (error) {
-        setError(error.message);
+      if (result.error) {
+        setError(result.error);
+        setLoading(false);
       }
     } catch {
       setError("Unable to sign in with Google.");
-    } finally {
       setLoading(false);
     }
   };
@@ -214,7 +211,7 @@ export default function LoginPage() {
             <input
               type="checkbox"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onChange={(e) => setRememberMeState(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
             />
             Remember me
@@ -265,5 +262,22 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          className="flex min-h-screen items-center justify-center bg-[#F5F6F7] px-4"
+          style={{ fontFamily: fontStack, fontWeight: 300 }}
+        >
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

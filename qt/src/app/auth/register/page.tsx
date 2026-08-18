@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getRememberMe, setRememberMe, startOAuthRedirect } from "@/lib/auth";
 
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
@@ -122,21 +123,14 @@ export default function RegisterPage() {
       setLoading(true);
       setError("");
 
-      const supabase = createClient();
+      const result = await startOAuthRedirect("google", "/dashboard");
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        setError(error.message);
+      if (result.error) {
+        setError(result.error);
+        setLoading(false);
       }
     } catch {
       setError("Unable to sign up with Google.");
-    } finally {
       setLoading(false);
     }
   };
