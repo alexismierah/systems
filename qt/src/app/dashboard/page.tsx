@@ -96,7 +96,6 @@ export default function DashboardPage() {
 
     loadData();
 
-    // Refresh dashboard when localStorage changes
     const handleStorage = () => {
       loadData();
     };
@@ -186,25 +185,33 @@ export default function DashboardPage() {
         fontWeight: 300,
       }}
     >
-      {/* Empty Dashboard */}
-      {!hasActivities && (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-          <h1
-            className="text-xl text-gray-900"
-            style={{
-              fontWeight: 400,
-            }}
-          >
-            No Activities yet
-          </h1>
+      {/* ============================= */}
+      {/* EMPTY DASHBOARD */}
+      {/* ============================= */}
 
-          <p className="mt-2 text-sm text-gray-500">
-            Add inventory or create quotation
-          </p>
+      {!hasActivities && (
+        <div className="flex min-h-[calc(90vh-2rem)] w-full items-center justify-center px-6 text-center">
+          <div className="flex flex-col items-center justify-center">
+            <h1
+              className="text-xl text-gray-900"
+              style={{
+                fontWeight: 400,
+              }}
+            >
+              No Activities yet
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Add inventory or create quotation
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Dashboard with Activities */}
+      {/* ============================= */}
+      {/* DASHBOARD WITH ACTIVITIES */}
+      {/* ============================= */}
+
       {hasActivities && (
         <>
           {/* Header */}
@@ -299,8 +306,7 @@ export default function DashboardPage() {
                             <td className="px-6 py-4">
                               <span
                                 className={
-                                  item.quantity <=
-                                  5
+                                  item.quantity <= 5
                                     ? "text-red-600"
                                     : "text-gray-600"
                                 }
@@ -308,9 +314,7 @@ export default function DashboardPage() {
                                   fontWeight: 500,
                                 }}
                               >
-                                {
-                                  item.quantity
-                                }
+                                {item.quantity}
                               </span>
                             </td>
 
@@ -319,9 +323,7 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setEditingInventory(
-                                      item
-                                    )
+                                    setEditingInventory(item)
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
                                   title="Edit"
@@ -332,9 +334,7 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setDeletingInventory(
-                                      item
-                                    )
+                                    setDeletingInventory(item)
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                                   title="Delete"
@@ -402,9 +402,7 @@ export default function DashboardPage() {
                         .slice(0, 5)
                         .map((quotation) => (
                           <tr
-                            key={
-                              quotation.id
-                            }
+                            key={quotation.id}
                             className="transition hover:bg-gray-50"
                           >
                             <td
@@ -413,9 +411,7 @@ export default function DashboardPage() {
                                 fontWeight: 500,
                               }}
                             >
-                              {
-                                quotation.id
-                              }
+                              {quotation.id}
                             </td>
 
                             <td className="px-6 py-4">
@@ -425,15 +421,11 @@ export default function DashboardPage() {
                                   fontWeight: 500,
                                 }}
                               >
-                                {
-                                  quotation.customer
-                                }
+                                {quotation.customer}
                               </p>
 
                               <p className="text-xs text-gray-500">
-                                {
-                                  quotation.email
-                                }
+                                {quotation.email}
                               </p>
                             </td>
 
@@ -443,8 +435,7 @@ export default function DashboardPage() {
                               ).toLocaleDateString(
                                 "en-PH",
                                 {
-                                  month:
-                                    "short",
+                                  month: "short",
                                   day: "numeric",
                                   year: "numeric",
                                 }
@@ -453,9 +444,7 @@ export default function DashboardPage() {
 
                             <td className="px-6 py-4">
                               <span className="text-gray-600">
-                                {
-                                  quotation.status
-                                }
+                                {quotation.status}
                               </span>
                             </td>
 
@@ -464,9 +453,7 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setViewQuotation(
-                                      quotation
-                                    )
+                                    setViewQuotation(quotation)
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
                                   title="View"
@@ -477,9 +464,7 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setDeletingQuotation(
-                                      quotation
-                                    )
+                                    setDeletingQuotation(quotation)
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                                   title="Delete"
@@ -503,9 +488,7 @@ export default function DashboardPage() {
       {viewQuotation && (
         <Modal
           title="Quotation details"
-          onClose={() =>
-            setViewQuotation(null)
-          }
+          onClose={() => setViewQuotation(null)}
         >
           <div className="space-y-4">
             <InfoRow
@@ -515,37 +498,28 @@ export default function DashboardPage() {
 
             <InfoRow
               label="Customer"
-              value={
-                viewQuotation.customer
-              }
+              value={viewQuotation.customer}
             />
 
             <InfoRow
               label="Email"
-              value={
-                viewQuotation.email
-              }
+              value={viewQuotation.email}
             />
 
             <InfoRow
               label="Date"
               value={new Date(
                 viewQuotation.date
-              ).toLocaleDateString(
-                "en-PH",
-                {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                }
-              )}
+              ).toLocaleDateString("en-PH", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
             />
 
             <InfoRow
               label="Status"
-              value={
-                viewQuotation.status
-              }
+              value={viewQuotation.status}
             />
 
             <div className="rounded-2xl bg-gray-50 p-4">
@@ -567,9 +541,7 @@ export default function DashboardPage() {
 
           <button
             type="button"
-            onClick={() =>
-              setViewQuotation(null)
-            }
+            onClick={() => setViewQuotation(null)}
             className="mt-6 h-11 w-full rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
             style={{
               fontWeight: 500,
@@ -584,27 +556,20 @@ export default function DashboardPage() {
       {editingInventory && (
         <EditInventoryModal
           item={editingInventory}
-          onClose={() =>
-            setEditingInventory(null)
-          }
+          onClose={() => setEditingInventory(null)}
           onSave={(updatedItem) => {
             const updatedInventory =
               inventory.map((item) =>
-                item.id ===
-                updatedItem.id
+                item.id === updatedItem.id
                   ? updatedItem
                   : item
               );
 
-            setInventory(
-              updatedInventory
-            );
+            setInventory(updatedInventory);
 
             localStorage.setItem(
               "inventory",
-              JSON.stringify(
-                updatedInventory
-              )
+              JSON.stringify(updatedInventory)
             );
 
             setEditingInventory(null);
@@ -616,22 +581,17 @@ export default function DashboardPage() {
       {deletingInventory && (
         <Modal
           title="Delete inventory"
-          onClose={() =>
-            setDeletingInventory(null)
-          }
+          onClose={() => setDeletingInventory(null)}
         >
           <p className="text-sm text-gray-500">
-            Are you sure you want to
-            delete{" "}
+            Are you sure you want to delete{" "}
             <span
               className="text-gray-900"
               style={{
                 fontWeight: 500,
               }}
             >
-              {
-                deletingInventory.name
-              }
+              {deletingInventory.name}
             </span>
             ?
           </p>
@@ -640,9 +600,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() =>
-                setDeletingInventory(
-                  null
-                )
+                setDeletingInventory(null)
               }
               className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -652,18 +610,14 @@ export default function DashboardPage() {
             <button
               type="button"
               disabled={saving}
-              onClick={
-                deleteInventory
-              }
+              onClick={deleteInventory}
               className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-red-600 text-sm text-white hover:bg-red-700 disabled:opacity-60"
             >
               {saving && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
 
-              {saving
-                ? "Deleting..."
-                : "Delete"}
+              {saving ? "Deleting..." : "Delete"}
             </button>
           </div>
         </Modal>
@@ -673,15 +627,10 @@ export default function DashboardPage() {
       {deletingQuotation && (
         <Modal
           title="Delete quotation"
-          onClose={() =>
-            setDeletingQuotation(
-              null
-            )
-          }
+          onClose={() => setDeletingQuotation(null)}
         >
           <p className="text-sm text-gray-500">
-            Are you sure you want to
-            delete{" "}
+            Are you sure you want to delete{" "}
             <span
               className="text-gray-900"
               style={{
@@ -697,9 +646,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() =>
-                setDeletingQuotation(
-                  null
-                )
+                setDeletingQuotation(null)
               }
               className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -709,18 +656,14 @@ export default function DashboardPage() {
             <button
               type="button"
               disabled={saving}
-              onClick={
-                deleteQuotation
-              }
+              onClick={deleteQuotation}
               className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-red-600 text-sm text-white hover:bg-red-700 disabled:opacity-60"
             >
               {saving && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
 
-              {saving
-                ? "Deleting..."
-                : "Delete"}
+              {saving ? "Deleting..." : "Delete"}
             </button>
           </div>
         </Modal>
@@ -822,24 +765,17 @@ function EditInventoryModal({
 }: {
   item: InventoryItem;
   onClose: () => void;
-  onSave: (
-    item: InventoryItem
-  ) => void;
+  onSave: (item: InventoryItem) => void;
 }) {
-  const [name, setName] =
-    useState(item.name);
-
-  const [sku, setSku] =
-    useState(item.sku);
-
-  const [category, setCategory] =
-    useState(item.category);
-
-  const [quantity, setQuantity] =
-    useState(String(item.quantity));
-
-  const [price, setPrice] =
-    useState(String(item.price));
+  const [name, setName] = useState(item.name);
+  const [sku, setSku] = useState(item.sku);
+  const [category, setCategory] = useState(item.category);
+  const [quantity, setQuantity] = useState(
+    String(item.quantity)
+  );
+  const [price, setPrice] = useState(
+    String(item.price)
+  );
 
   const handleSave = () => {
     if (
@@ -847,25 +783,18 @@ function EditInventoryModal({
       !sku.trim() ||
       !category.trim()
     ) {
-      alert(
-        "Please fill in all fields."
-      );
+      alert("Please fill in all fields.");
       return;
     }
 
-    const newQuantity =
-      Number(quantity);
-
-    const newPrice =
-      Number(price);
+    const newQuantity = Number(quantity);
+    const newPrice = Number(price);
 
     if (
       Number.isNaN(newQuantity) ||
       Number.isNaN(newPrice)
     ) {
-      alert(
-        "Please enter valid numbers."
-      );
+      alert("Please enter valid numbers.");
       return;
     }
 
@@ -873,9 +802,7 @@ function EditInventoryModal({
       newQuantity < 0 ||
       newPrice < 0
     ) {
-      alert(
-        "Values cannot be negative."
-      );
+      alert("Values cannot be negative.");
       return;
     }
 
@@ -964,9 +891,7 @@ function Input({
 }: {
   label: string;
   value: string;
-  onChange: (
-    value: string
-  ) => void;
+  onChange: (value: string) => void;
   type?: string;
 }) {
   return (
@@ -979,9 +904,7 @@ function Input({
         type={type}
         value={value}
         onChange={(event) =>
-          onChange(
-            event.target.value
-          )
+          onChange(event.target.value)
         }
         className="h-11 w-full rounded-full border border-gray-200 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
       />
