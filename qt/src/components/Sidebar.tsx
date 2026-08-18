@@ -324,16 +324,18 @@ export default function Sidebar({
       >
         <div
           ref={accountRef}
-          className="relative min-w-0"
+          className={`relative ${
+            collapsed ? "min-w-0" : "w-full"
+          }`}
         >
           <button
             type="button"
             onClick={() =>
               setAccountOpen((prev) => !prev)
             }
-            className={`flex max-w-full items-center rounded-full py-1 text-sm text-gray-700 transition hover:bg-gray-50 ${
+            className={`flex w-full items-center rounded-full py-1 text-sm text-gray-700 transition hover:bg-gray-50 ${
               collapsed
-                ? "px-1"
+                ? "justify-center px-1"
                 : "gap-2 px-2"
             }`}
             aria-expanded={accountOpen}
@@ -342,7 +344,7 @@ export default function Sidebar({
             {!collapsed && (
               <>
                 {/* Name and Company */}
-                <span className="min-w-0 text-left leading-tight">
+                <span className="min-w-0 flex-1 text-left leading-tight">
                   <span
                     className="block truncate text-sm text-gray-900"
                     style={{ fontWeight: 500 }}
@@ -357,8 +359,9 @@ export default function Sidebar({
                   )}
                 </span>
 
+                {/* Dropdown icon pushed to the far right */}
                 <ChevronDown
-                  className={`h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform ${
+                  className={`ml-auto h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform ${
                     accountOpen ? "rotate-180" : ""
                   }`}
                 />
