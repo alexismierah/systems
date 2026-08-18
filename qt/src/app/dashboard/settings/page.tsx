@@ -138,7 +138,7 @@ export default function SettingsPage() {
           });
         }
 
-        // Let the Header (and anywhere else) know to refresh the name.
+        // Let the sidebar (and anywhere else) know to refresh the name.
         window.dispatchEvent(new Event("profile-updated"));
       }
 

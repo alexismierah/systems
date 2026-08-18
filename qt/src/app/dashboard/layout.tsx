@@ -1,20 +1,9 @@
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import DashboardShell from "@/components/DashboardShell";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-
-      <Header />
-
-      <main className="ml-64 pt-16">
-        <div className="p-6">{children}</div>
-      </main>
-    </div>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }
