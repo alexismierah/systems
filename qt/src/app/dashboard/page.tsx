@@ -39,13 +39,8 @@ type Quotation = {
 };
 
 export default function DashboardPage() {
-  const [inventory, setInventory] = useState<
-    InventoryItem[]
-  >([]);
-
-  const [quotations, setQuotations] = useState<
-    Quotation[]
-  >([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
 
   const [viewQuotation, setViewQuotation] =
     useState<Quotation | null>(null);
@@ -59,57 +54,47 @@ export default function DashboardPage() {
   const [deletingQuotation, setDeletingQuotation] =
     useState<Quotation | null>(null);
 
-  const [saving, setSaving] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Load inventory and quotations
+  // --------------------------------------------------
+  // LOAD DATA
+  // --------------------------------------------------
+
   useEffect(() => {
     const loadData = () => {
-      // Inventory
       const storedInventory =
         localStorage.getItem("inventory");
 
       if (storedInventory) {
         try {
-          setInventory(
-            JSON.parse(storedInventory)
-          );
+          setInventory(JSON.parse(storedInventory));
         } catch {
           setInventory([]);
         }
+      } else {
+        setInventory([]);
       }
 
-      // Quotations
       const storedQuotations =
         localStorage.getItem("quotations");
 
       if (storedQuotations) {
         try {
-          setQuotations(
-            JSON.parse(storedQuotations)
-          );
+          setQuotations(JSON.parse(storedQuotations));
         } catch {
           setQuotations([]);
         }
+      } else {
+        setQuotations([]);
       }
     };
 
     loadData();
 
-    const handleStorage = () => {
-      loadData();
-    };
-
-    window.addEventListener(
-      "storage",
-      handleStorage
-    );
+    window.addEventListener("storage", loadData);
 
     return () => {
-      window.removeEventListener(
-        "storage",
-        handleStorage
-      );
+      window.removeEventListener("storage", loadData);
     };
   }, []);
 
@@ -117,9 +102,9 @@ export default function DashboardPage() {
     inventory.length > 0 ||
     quotations.length > 0;
 
-  // -----------------------------
-  // Delete Inventory
-  // -----------------------------
+  // --------------------------------------------------
+  // DELETE INVENTORY
+  // --------------------------------------------------
 
   const deleteInventory = async () => {
     if (!deletingInventory) return;
@@ -130,11 +115,9 @@ export default function DashboardPage() {
       setTimeout(resolve, 300)
     );
 
-    const updatedInventory =
-      inventory.filter(
-        (item) =>
-          item.id !== deletingInventory.id
-      );
+    const updatedInventory = inventory.filter(
+      (item) => item.id !== deletingInventory.id
+    );
 
     setInventory(updatedInventory);
 
@@ -147,9 +130,9 @@ export default function DashboardPage() {
     setSaving(false);
   };
 
-  // -----------------------------
-  // Delete Quotation
-  // -----------------------------
+  // --------------------------------------------------
+  // DELETE QUOTATION
+  // --------------------------------------------------
 
   const deleteQuotation = async () => {
     if (!deletingQuotation) return;
@@ -160,12 +143,10 @@ export default function DashboardPage() {
       setTimeout(resolve, 300)
     );
 
-    const updatedQuotations =
-      quotations.filter(
-        (quotation) =>
-          quotation.id !==
-          deletingQuotation.id
-      );
+    const updatedQuotations = quotations.filter(
+      (quotation) =>
+        quotation.id !== deletingQuotation.id
+    );
 
     setQuotations(updatedQuotations);
 
@@ -180,58 +161,69 @@ export default function DashboardPage() {
 
   return (
     <div
+      className="min-h-full"
       style={{
         fontFamily: fontStack,
         fontWeight: 300,
       }}
     >
-      {/* ============================= */}
-      {/* EMPTY DASHBOARD */}
-      {/* ============================= */}
+      {/* =====================================================
+          DASHBOARD HEADER
+      ===================================================== */}
+
+      <div className="mb-8">
+        <h1
+          className="text-2xl tracking-tight text-gray-900"
+          style={{
+            fontWeight: 300,
+          }}
+        >
+          Dashboard
+        </h1>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Manage your recent inventory and quotations.
+        </p>
+      </div>
+
+      {/* =====================================================
+          EMPTY DASHBOARD
+      ===================================================== */}
 
       {!hasActivities && (
-        <div className="flex min-h-[calc(90vh-2rem)] w-full items-center justify-center px-6 text-center">
+        <div className="flex min-h-[calc(80vh-8rem)] w-full items-center justify-center px-6 text-center">
           <div className="flex flex-col items-center justify-center">
-            <h1
-              className="text-xl text-gray-900"
+            {/* ONE ICON ONLY */}
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+              <Package className="h-6 w-6 text-gray-400" />
+            </div>
+
+            <h2
+              className="mt-5 text-xl text-gray-900"
               style={{
                 fontWeight: 400,
               }}
             >
               No Activities yet
-            </h1>
+            </h2>
 
             <p className="mt-2 text-sm text-gray-500">
-              Add inventory or create quotation
+              Add inventory or create a quotation to get started.
             </p>
           </div>
         </div>
       )}
 
-      {/* ============================= */}
-      {/* DASHBOARD WITH ACTIVITIES */}
-      {/* ============================= */}
+      {/* =====================================================
+          DASHBOARD WITH ACTIVITIES
+      ===================================================== */}
 
       {hasActivities && (
         <>
-          {/* Header */}
-          <div className="mb-8">
-            <h1
-              className="text-2xl text-gray-900"
-              style={{
-                fontWeight: 400,
-              }}
-            >
-              Recent Activity
-            </h1>
+          {/* =================================================
+              INVENTORY
+          ================================================= */}
 
-            <p className="mt-2 text-sm text-gray-500">
-              Manage your recent inventory
-              and quotations.
-            </p>
-          </div>
-
-          {/* Inventory */}
           {inventory.length > 0 && (
             <section className="mb-8">
               <div className="mb-4 flex items-center gap-3">
@@ -352,7 +344,10 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* Quotations */}
+          {/* =================================================
+              QUOTATIONS
+          ================================================= */}
+
           {quotations.length > 0 && (
             <section>
               <div className="mb-4 flex items-center gap-3">
@@ -453,7 +448,9 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setViewQuotation(quotation)
+                                    setViewQuotation(
+                                      quotation
+                                    )
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
                                   title="View"
@@ -464,7 +461,9 @@ export default function DashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setDeletingQuotation(quotation)
+                                    setDeletingQuotation(
+                                      quotation
+                                    )
                                   }
                                   className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                                   title="Delete"
@@ -484,7 +483,10 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* View Quotation */}
+      {/* =====================================================
+          VIEW QUOTATION
+      ===================================================== */}
+
       {viewQuotation && (
         <Modal
           title="Quotation details"
@@ -552,7 +554,10 @@ export default function DashboardPage() {
         </Modal>
       )}
 
-      {/* Edit Inventory */}
+      {/* =====================================================
+          EDIT INVENTORY
+      ===================================================== */}
+
       {editingInventory && (
         <EditInventoryModal
           item={editingInventory}
@@ -577,7 +582,10 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Delete Inventory */}
+      {/* =====================================================
+          DELETE INVENTORY
+      ===================================================== */}
+
       {deletingInventory && (
         <Modal
           title="Delete inventory"
@@ -623,7 +631,10 @@ export default function DashboardPage() {
         </Modal>
       )}
 
-      {/* Delete Quotation */}
+      {/* =====================================================
+          DELETE QUOTATION
+      ===================================================== */}
+
       {deletingQuotation && (
         <Modal
           title="Delete quotation"
@@ -672,9 +683,9 @@ export default function DashboardPage() {
   );
 }
 
-/* ----------------------------- */
-/* Modal */
-/* ----------------------------- */
+/* =========================================================
+   MODAL
+========================================================= */
 
 function Modal({
   title,
@@ -725,9 +736,9 @@ function Modal({
   );
 }
 
-/* ----------------------------- */
-/* Info Row */
-/* ----------------------------- */
+/* =========================================================
+   INFO ROW
+========================================================= */
 
 function InfoRow({
   label,
@@ -754,9 +765,9 @@ function InfoRow({
   );
 }
 
-/* ----------------------------- */
-/* Edit Inventory */
-/* ----------------------------- */
+/* =========================================================
+   EDIT INVENTORY MODAL
+========================================================= */
 
 function EditInventoryModal({
   item,
@@ -879,9 +890,9 @@ function EditInventoryModal({
   );
 }
 
-/* ----------------------------- */
-/* Input */
-/* ----------------------------- */
+/* =========================================================
+   INPUT
+========================================================= */
 
 function Input({
   label,
