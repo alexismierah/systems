@@ -193,10 +193,9 @@ export default function DashboardPage() {
       {!hasActivities && (
         <div className="flex min-h-[calc(80vh-8rem)] w-full items-center justify-center px-6 text-center">
           <div className="flex flex-col items-center justify-center">
-            {/* ONE ICON ONLY */}
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-              <Package className="h-6 w-6 text-gray-400" />
-            </div>
+
+            {/* PACKAGE ICON - NO CIRCLE / NO BACKGROUND */}
+            <Package className="h-8 w-8 text-gray-400" />
 
             <h2
               className="mt-5 text-xl text-gray-900"
@@ -227,9 +226,7 @@ export default function DashboardPage() {
           {inventory.length > 0 && (
             <section className="mb-8">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-gray-100 p-2">
-                  <Package className="h-4 w-4 text-gray-500" />
-                </div>
+                <Package className="h-4 w-4 text-gray-500" />
 
                 <h2
                   className="text-lg text-gray-900"
@@ -351,9 +348,7 @@ export default function DashboardPage() {
           {quotations.length > 0 && (
             <section>
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-gray-100 p-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
-                </div>
+                <FileText className="h-4 w-4 text-gray-500" />
 
                 <h2
                   className="text-lg text-gray-900"

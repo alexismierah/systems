@@ -9,6 +9,7 @@ import {
   Trash2,
   X,
   SlidersHorizontal,
+  FolderPlus,
 } from "lucide-react";
 
 type InventoryItem = {
@@ -25,12 +26,22 @@ const fontStack =
 
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
   const [showModal, setShowModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+
   const [editingItem, setEditingItem] =
     useState<InventoryItem | null>(null);
+
+  const [editingCategory, setEditingCategory] =
+    useState<string | null>(null);
+
+  const [categoryName, setCategoryName] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -41,21 +52,29 @@ export default function InventoryPage() {
   });
 
   // --------------------------------------------------
-  // LOAD INVENTORY
+  // LOAD DATA
   // --------------------------------------------------
 
   useEffect(() => {
-    const stored = localStorage.getItem("inventory");
+    const storedInventory = localStorage.getItem("inventory");
+    const storedCategories = localStorage.getItem(
+      "inventory-categories"
+    );
 
-    if (!stored) {
-      setItems([]);
-      return;
+    if (storedInventory) {
+      try {
+        setItems(JSON.parse(storedInventory));
+      } catch {
+        setItems([]);
+      }
     }
 
-    try {
-      setItems(JSON.parse(stored));
-    } catch {
-      setItems([]);
+    if (storedCategories) {
+      try {
+        setCategories(JSON.parse(storedCategories));
+      } catch {
+        setCategories([]);
+      }
     }
   }, []);
 
@@ -73,19 +92,160 @@ export default function InventoryPage() {
   };
 
   // --------------------------------------------------
-  // CATEGORIES
+  // SAVE CATEGORIES
   // --------------------------------------------------
 
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(
-      new Set(items.map((item) => item.category))
+  const saveCategories = (newCategories: string[]) => {
+    setCategories(newCategories);
+
+    localStorage.setItem(
+      "inventory-categories",
+      JSON.stringify(newCategories)
+    );
+  };
+
+  // --------------------------------------------------
+  // CREATE / EDIT SUBTAB
+  // --------------------------------------------------
+
+  const openCreateCategory = () => {
+    setEditingCategory(null);
+    setCategoryName("");
+    setShowCategoryModal(true);
+  };
+
+  const openEditCategory = (category: string) => {
+    setEditingCategory(category);
+    setCategoryName(category);
+    setShowCategoryModal(true);
+  };
+
+  const closeCategoryModal = () => {
+    setShowCategoryModal(false);
+    setEditingCategory(null);
+    setCategoryName("");
+  };
+
+  const handleCategorySubmit = (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
+    const name = categoryName.trim();
+
+    if (!name) {
+      alert("Please enter a subtab name.");
+      return;
+    }
+
+    const duplicate = categories.some(
+      (category) =>
+        category.toLowerCase() === name.toLowerCase() &&
+        category !== editingCategory
     );
 
-    return ["All", ...uniqueCategories];
-  }, [items]);
+    if (duplicate) {
+      alert("This subtab already exists.");
+      return;
+    }
+
+    // EDIT SUBTAB
+    if (editingCategory) {
+      const updatedCategories = categories.map(
+        (category) =>
+          category === editingCategory ? name : category
+      );
+
+      saveCategories(updatedCategories);
+
+      const updatedItems = items.map((item) =>
+        item.category === editingCategory
+          ? {
+              ...item,
+              category: name,
+            }
+          : item
+      );
+
+      saveItems(updatedItems);
+
+      if (activeCategory === editingCategory) {
+        setActiveCategory(name);
+      }
+
+      if (categoryFilter === editingCategory) {
+        setCategoryFilter(name);
+      }
+    }
+
+    // CREATE SUBTAB
+    else {
+      const updatedCategories = [
+        ...categories,
+        name,
+      ];
+
+      saveCategories(updatedCategories);
+
+      setActiveCategory(name);
+      setCategoryFilter(name);
+    }
+
+    closeCategoryModal();
+  };
 
   // --------------------------------------------------
-  // SEARCH + FILTER
+  // DELETE SUBTAB
+  // --------------------------------------------------
+
+  const deleteCategory = (category: string) => {
+    const itemCount = items.filter(
+      (item) => item.category === category
+    ).length;
+
+    const message =
+      itemCount > 0
+        ? `This subtab contains ${itemCount} ${
+            itemCount === 1 ? "item" : "items"
+          }. Deleting it will also remove those inventory items. Continue?`
+        : `Delete "${category}" subtab?`;
+
+    const confirmed = window.confirm(message);
+
+    if (!confirmed) return;
+
+    const updatedCategories = categories.filter(
+      (item) => item !== category
+    );
+
+    saveCategories(updatedCategories);
+
+    if (itemCount > 0) {
+      saveItems(
+        items.filter(
+          (item) => item.category !== category
+        )
+      );
+    }
+
+    if (updatedCategories.length === 0) {
+      setActiveCategory("All");
+      setCategoryFilter("All");
+      setSearch("");
+      return;
+    }
+
+    if (activeCategory === category) {
+      setActiveCategory("All");
+    }
+
+    if (categoryFilter === category) {
+      setCategoryFilter("All");
+    }
+  };
+
+  // --------------------------------------------------
+  // FILTERED ITEMS
   // --------------------------------------------------
 
   const filteredItems = useMemo(() => {
@@ -98,31 +258,56 @@ export default function InventoryPage() {
         item.sku.toLowerCase().includes(searchValue) ||
         item.category.toLowerCase().includes(searchValue);
 
+      const matchesTab =
+        activeCategory === "All" ||
+        item.category === activeCategory;
+
       const matchesCategory =
         categoryFilter === "All" ||
         item.category === categoryFilter;
 
-      return matchesSearch && matchesCategory;
+      return (
+        matchesSearch &&
+        matchesTab &&
+        matchesCategory
+      );
     });
-  }, [items, search, categoryFilter]);
+  }, [
+    items,
+    search,
+    activeCategory,
+    categoryFilter,
+  ]);
 
   // --------------------------------------------------
-  // MODAL
+  // ADD ITEM
   // --------------------------------------------------
 
   const openAddModal = () => {
+    if (categories.length === 0) {
+      openCreateCategory();
+      return;
+    }
+
     setEditingItem(null);
 
     setForm({
       name: "",
       sku: "",
-      category: "",
+      category:
+        activeCategory !== "All"
+          ? activeCategory
+          : categories[0],
       quantity: "",
       price: "",
     });
 
     setShowModal(true);
   };
+
+  // --------------------------------------------------
+  // EDIT ITEM
+  // --------------------------------------------------
 
   const openEditModal = (item: InventoryItem) => {
     setEditingItem(item);
@@ -144,7 +329,7 @@ export default function InventoryPage() {
   };
 
   // --------------------------------------------------
-  // CREATE / UPDATE
+  // CREATE / UPDATE ITEM
   // --------------------------------------------------
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -164,16 +349,22 @@ export default function InventoryPage() {
     const quantity = Number(form.quantity);
     const price = Number(form.price);
 
-    if (Number.isNaN(quantity) || Number.isNaN(price)) {
+    if (
+      Number.isNaN(quantity) ||
+      Number.isNaN(price)
+    ) {
       alert("Please enter valid numbers.");
       return;
     }
 
     if (quantity < 0 || price < 0) {
-      alert("Quantity and price cannot be negative.");
+      alert(
+        "Quantity and price cannot be negative."
+      );
       return;
     }
 
+    // UPDATE
     if (editingItem) {
       const updatedItems = items.map((item) =>
         item.id === editingItem.id
@@ -189,7 +380,10 @@ export default function InventoryPage() {
       );
 
       saveItems(updatedItems);
-    } else {
+    }
+
+    // CREATE
+    else {
       const newItem: InventoryItem = {
         id: crypto.randomUUID(),
         name: form.name.trim(),
@@ -206,11 +400,13 @@ export default function InventoryPage() {
   };
 
   // --------------------------------------------------
-  // DELETE
+  // DELETE ITEM
   // --------------------------------------------------
 
   const deleteItem = (id: string) => {
-    const item = items.find((item) => item.id === id);
+    const item = items.find(
+      (item) => item.id === id
+    );
 
     if (!item) return;
 
@@ -221,13 +417,29 @@ export default function InventoryPage() {
     if (!confirmed) return;
 
     saveItems(
-      items.filter((item) => item.id !== id)
+      items.filter(
+        (item) => item.id !== id
+      )
     );
   };
 
   // --------------------------------------------------
-  // STATISTICS
+  // CATEGORY COUNT
   // --------------------------------------------------
+
+  const getCategoryCount = (category: string) => {
+    if (category === "All") {
+      return items.length;
+    }
+
+    return items.filter(
+      (item) => item.category === category
+    ).length;
+  };
+
+  // ==================================================
+  // RENDER
+  // ==================================================
 
   return (
     <div
@@ -237,15 +449,17 @@ export default function InventoryPage() {
         fontWeight: 300,
       }}
     >
-      {/* =====================================================
+      {/* ==================================================
           HEADER
-      ===================================================== */}
+      ================================================== */}
 
       <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div>
           <h1
             className="text-2xl tracking-tight text-gray-900"
-            style={{ fontWeight: 300 }}
+            style={{
+              fontWeight: 300,
+            }}
           >
             Inventory
           </h1>
@@ -255,304 +469,463 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={openAddModal}
-          className="flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
-          style={{ fontWeight: 400 }}
-        >
-          <Plus className="h-4 w-4" />
-          Add Item
-        </button>
+        {categories.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={openCreateCategory}
+              className="flex h-11 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 text-sm text-gray-700 transition hover:bg-gray-50"
+            >
+              <FolderPlus className="h-4 w-4" />
+              Create Subtab
+            </button>
+
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
+              style={{
+                fontWeight: 400,
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* =====================================================
-          INVENTORY CARD
-      ===================================================== */}
+      {/* ==================================================
+          NO SUBTAB STATE
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          IMPORTANT:
+          There is NO inventory table here.
+      ================================================== */}
 
-        {/* Toolbar */}
+      {categories.length === 0 ? (
+        <div className="flex min-h-[520px] items-center justify-center">
+          <div className="mx-auto max-w-md px-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
+              <FolderPlus className="h-7 w-7 text-gray-400" />
+            </div>
 
-        <div className="flex flex-col gap-4 border-b border-gray-100 p-5 lg:flex-row lg:items-center lg:justify-between">
-
-          <div>
             <h2
-              className="text-base text-gray-900"
-              style={{ fontWeight: 400 }}
+              className="mt-6 text-lg text-gray-900"
+              style={{
+                fontWeight: 400,
+              }}
             >
-              Inventory Items
+              Create a subtab first
             </h2>
 
-            <p className="mt-1 text-xs text-gray-400">
-              {filteredItems.length}{" "}
-              {filteredItems.length === 1
-                ? "item"
-                : "items"}
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
+              Before adding inventory items,
+              create a subtab to organize your
+              products.
             </p>
+
+            <button
+              type="button"
+              onClick={openCreateCategory}
+              className="mx-auto mt-6 flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-6 text-sm text-white transition hover:bg-black"
+              style={{
+                fontWeight: 400,
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Create Subtab
+            </button>
           </div>
+        </div>
+      ) : (
+        <>
+          {/* ==================================================
+              SUBTABS
+          ================================================== */}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {/* ALL */}
 
-            {/* Search */}
-
-            <div className="relative sm:w-72">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-              <input
-                type="search"
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                placeholder="Search inventory"
-                className="h-10 w-full rounded-full border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
-              />
-            </div>
-
-            {/* Category */}
-
-            <div className="relative">
-              <SlidersHorizontal className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-              <select
-                value={categoryFilter}
-                onChange={(e) =>
-                  setCategoryFilter(e.target.value)
-                }
-                className="h-10 w-full appearance-none rounded-full border border-gray-200 bg-gray-50 pl-10 pr-9 text-sm text-gray-700 outline-none transition focus:border-gray-900 focus:bg-white sm:w-40"
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveCategory("All");
+                  setCategoryFilter("All");
+                }}
+                className={`flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition ${
+                  activeCategory === "All"
+                    ? "bg-gray-900 text-white"
+                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                }`}
               >
-                {categories.map((category) => (
-                  <option
-                    key={category}
-                    value={category}
+                All
+
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[11px] ${
+                    activeCategory === "All"
+                      ? "bg-white/15 text-white"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {getCategoryCount("All")}
+                </span>
+              </button>
+
+              {/* CATEGORY SUBTABS */}
+
+              {categories.map((category) => (
+                <div
+                  key={category}
+                  className="group relative flex shrink-0 items-center"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveCategory(category);
+                      setCategoryFilter(category);
+                    }}
+                    className={`flex h-10 items-center gap-2 rounded-full px-4 pr-20 text-sm transition ${
+                      activeCategory === category
+                        ? "bg-gray-900 text-white"
+                        : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
                   >
                     {category}
-                  </option>
-                ))}
-              </select>
-            </div>
 
-          </div>
-        </div>
-
-        {/* =====================================================
-            TABLE
-        ===================================================== */}
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
-
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/70">
-                <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                  Product
-                </th>
-
-                <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                  SKU
-                </th>
-
-                <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                  Category
-                </th>
-
-                <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                  Stock
-                </th>
-
-                <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                  Price
-                </th>
-
-                <th className="px-6 py-3 text-right text-xs font-light uppercase tracking-wide text-gray-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-100">
-
-              {filteredItems.map((item) => (
-
-                <tr
-                  key={item.id}
-                  className="transition hover:bg-gray-50/60"
-                >
-
-                  {/* Product */}
-
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
-                        <Package className="h-4 w-4 text-gray-500" />
-                      </div>
-
-                      <div>
-                        <p
-                          className="text-gray-900"
-                          style={{ fontWeight: 400 }}
-                        >
-                          {item.name}
-                        </p>
-
-                        <p className="mt-0.5 text-xs text-gray-400">
-                          Product
-                        </p>
-                      </div>
-
-                    </div>
-                  </td>
-
-                  {/* SKU */}
-
-                  <td className="px-6 py-5 text-gray-500">
-                    {item.sku}
-                  </td>
-
-                  {/* Category */}
-
-                  <td className="px-6 py-5">
-                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-                      {item.category}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[11px] ${
+                        activeCategory === category
+                          ? "bg-white/15 text-white"
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {getCategoryCount(category)}
                     </span>
-                  </td>
+                  </button>
 
-                  {/* Stock */}
+                  {/* SUBTAB ACTIONS */}
 
-                  <td className="px-6 py-5">
+                  <div className="absolute right-2 hidden items-center gap-0.5 group-hover:flex">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openEditCategory(category)
+                      }
+                      className="rounded-full p-1.5 text-gray-400 hover:bg-white/20 hover:text-current"
+                      title="Edit subtab"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
 
-                    <div className="flex items-center gap-2">
-
-                      <span
-                        className={
-                          item.quantity <= 5
-                            ? "text-red-600"
-                            : item.quantity <= 10
-                              ? "text-amber-600"
-                              : "text-gray-700"
-                        }
-                      >
-                        {item.quantity}
-                      </span>
-
-                      {item.quantity <= 5 && (
-                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] text-red-500">
-                          Low
-                        </span>
-                      )}
-
-                    </div>
-
-                  </td>
-
-                  {/* Price */}
-
-                  <td className="px-6 py-5 text-gray-700">
-                    ₱{item.price.toLocaleString()}
-                  </td>
-
-                  {/* Actions */}
-
-                  <td className="px-6 py-5">
-
-                    <div className="flex justify-end gap-1">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          openEditModal(item)
-                        }
-                        className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
-                        title="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          deleteItem(item.id)
-                        }
-                        className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-
-                    </div>
-
-                  </td>
-
-                </tr>
-
+                    <button
+                      type="button"
+                      onClick={() =>
+                        deleteCategory(category)
+                      }
+                      className="rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                      title="Delete subtab"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
               ))}
 
-              {/* Empty state */}
+              {/* NEW SUBTAB */}
 
-              {filteredItems.length === 0 && (
+              <button
+                type="button"
+                onClick={openCreateCategory}
+                className="flex h-10 shrink-0 items-center gap-2 rounded-full border border-dashed border-gray-300 px-4 text-sm text-gray-400 transition hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+              >
+                <Plus className="h-4 w-4" />
+                New Subtab
+              </button>
+            </div>
+          </div>
 
-                <tr>
+          {/* ==================================================
+              INVENTORY CONTENT
 
-                  <td
-                    colSpan={6}
-                    className="px-6 py-20 text-center"
+              No white panel around the table.
+          ================================================== */}
+
+          <div>
+            {/* TOOLBAR */}
+
+            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2
+                  className="text-base text-gray-900"
+                  style={{
+                    fontWeight: 400,
+                  }}
+                >
+                  {activeCategory === "All"
+                    ? "Inventory Items"
+                    : activeCategory}
+                </h2>
+
+                <p className="mt-1 text-xs text-gray-400">
+                  {filteredItems.length}{" "}
+                  {filteredItems.length === 1
+                    ? "item"
+                    : "items"}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {/* SEARCH */}
+
+                <div className="relative sm:w-72">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(e.target.value)
+                    }
+                    placeholder="Search inventory"
+                    className="h-10 w-full rounded-full border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+                  />
+                </div>
+
+                {/* FILTER */}
+
+                <div className="relative">
+                  <SlidersHorizontal className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setCategoryFilter(value);
+                      setActiveCategory(value);
+                    }}
+                    className="h-10 w-full appearance-none rounded-full border border-gray-200 bg-gray-50 pl-10 pr-9 text-sm text-gray-700 outline-none transition focus:border-gray-900 focus:bg-white sm:w-40"
                   >
+                    <option value="All">
+                      All Categories
+                    </option>
 
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                      <Package className="h-5 w-5 text-gray-400" />
-                    </div>
+                    {categories.map((category) => (
+                      <option
+                        key={category}
+                        value={category}
+                      >
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
-                    <p
-                      className="mt-4 text-sm text-gray-700"
-                      style={{ fontWeight: 400 }}
+            {/* TABLE */}
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                      Product
+                    </th>
+
+                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                      SKU
+                    </th>
+
+                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                      Category
+                    </th>
+
+                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                      Stock
+                    </th>
+
+                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                      Price
+                    </th>
+
+                    <th className="px-6 py-3 text-right text-xs font-light uppercase tracking-wide text-gray-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-100">
+                  {filteredItems.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="transition hover:bg-gray-50/60"
                     >
-                      {items.length === 0
-                        ? "No inventory yet"
-                        : "No inventory found"}
-                    </p>
+                      {/* PRODUCT */}
 
-                    <p className="mt-1 text-sm text-gray-400">
-                      {items.length === 0
-                        ? "Add your first inventory item to get started."
-                        : "Try changing your search or filter."}
-                    </p>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
+                            <Package className="h-4 w-4 text-gray-500" />
+                          </div>
 
-                  </td>
+                          <div>
+                            <p
+                              className="text-gray-900"
+                              style={{
+                                fontWeight: 400,
+                              }}
+                            >
+                              {item.name}
+                            </p>
 
-                </tr>
+                            <p className="mt-0.5 text-xs text-gray-400">
+                              Product
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-              )}
+                      {/* SKU */}
 
-            </tbody>
+                      <td className="px-6 py-5 text-gray-500">
+                        {item.sku}
+                      </td>
 
-          </table>
-        </div>
-      </div>
+                      {/* CATEGORY */}
 
-      {/* =====================================================
-          ADD / EDIT MODAL
-      ===================================================== */}
+                      <td className="px-6 py-5">
+                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                          {item.category}
+                        </span>
+                      </td>
 
-      {showModal && (
+                      {/* STOCK */}
 
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={
+                              item.quantity <= 5
+                                ? "text-red-600"
+                                : item.quantity <= 10
+                                  ? "text-amber-600"
+                                  : "text-gray-700"
+                            }
+                          >
+                            {item.quantity}
+                          </span>
+
+                          {item.quantity <= 5 && (
+                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] text-red-500">
+                              Low
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* PRICE */}
+
+                      <td className="px-6 py-5 text-gray-700">
+                        ₱
+                        {item.price.toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
+                      </td>
+
+                      {/* ACTIONS */}
+
+                      <td className="px-6 py-5">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openEditModal(item)
+                            }
+                            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              deleteItem(item.id)
+                            }
+                            className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* EMPTY TABLE STATE */}
+
+                  {filteredItems.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-6 py-20 text-center"
+                      >
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                          <Package className="h-5 w-5 text-gray-400" />
+                        </div>
+
+                        <p
+                          className="mt-4 text-sm text-gray-700"
+                          style={{
+                            fontWeight: 400,
+                          }}
+                        >
+                          No inventory items
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-400">
+                          Add an item to this
+                          subtab to get started.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={openAddModal}
+                          className="mx-auto mt-5 flex h-10 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Item
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ==================================================
+          CREATE / EDIT SUBTAB MODAL
+      ================================================== */}
+
+      {showCategoryModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-[2px]"
-          onClick={closeModal}
+          onClick={closeCategoryModal}
         >
-
           <div
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
-
-            {/* Modal header */}
-
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-
               <div>
                 <p className="text-xs uppercase tracking-wider text-gray-400">
                   Inventory
@@ -560,7 +933,104 @@ export default function InventoryPage() {
 
                 <h2
                   className="mt-1 text-lg text-gray-900"
-                  style={{ fontWeight: 300 }}
+                  style={{
+                    fontWeight: 300,
+                  }}
+                >
+                  {editingCategory
+                    ? "Edit subtab"
+                    : "Create subtab"}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeCategoryModal}
+                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCategorySubmit}
+              className="space-y-5 p-6"
+            >
+              <div>
+                <label className="mb-1.5 block text-xs text-gray-500">
+                  Subtab name
+                </label>
+
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) =>
+                    setCategoryName(e.target.value)
+                  }
+                  placeholder="e.g. Artificial Flowers"
+                  autoFocus
+                  className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+                />
+              </div>
+
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="text-xs leading-5 text-gray-500">
+                  Create a subtab to organize your
+                  inventory. You can add products under
+                  each subtab.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCategoryModal}
+                  className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-600 transition hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
+                  style={{
+                    fontWeight: 400,
+                  }}
+                >
+                  {editingCategory
+                    ? "Save changes"
+                    : "Create Subtab"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================
+          ADD / EDIT ITEM MODAL
+      ================================================== */}
+
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-[2px]"
+          onClick={closeModal}
+        >
+          <div
+            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-400">
+                  Inventory
+                </p>
+
+                <h2
+                  className="mt-1 text-lg text-gray-900"
+                  style={{
+                    fontWeight: 300,
+                  }}
                 >
                   {editingItem
                     ? "Edit item"
@@ -575,16 +1045,12 @@ export default function InventoryPage() {
               >
                 <X className="h-4 w-4" />
               </button>
-
             </div>
-
-            {/* Form */}
 
             <form
               onSubmit={handleSubmit}
               className="space-y-4 p-6"
             >
-
               <Input
                 label="Product name"
                 value={form.name}
@@ -609,20 +1075,35 @@ export default function InventoryPage() {
                 }
               />
 
-              <Input
-                label="Category"
-                value={form.category}
-                placeholder="Enter category"
-                onChange={(value) =>
-                  setForm({
-                    ...form,
-                    category: value,
-                  })
-                }
-              />
+              {/* SUBTAB */}
+
+              <div>
+                <label className="mb-1.5 block text-xs text-gray-500">
+                  Subtab
+                </label>
+
+                <select
+                  value={form.category}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      category: e.target.value,
+                    })
+                  }
+                  className="h-11 w-full appearance-none rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+                >
+                  {categories.map((category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
-
                 <Input
                   label="Quantity"
                   type="number"
@@ -648,11 +1129,9 @@ export default function InventoryPage() {
                     })
                   }
                 />
-
               </div>
 
               <div className="flex gap-3 pt-3">
-
                 <button
                   type="button"
                   onClick={closeModal}
@@ -664,50 +1143,19 @@ export default function InventoryPage() {
                 <button
                   type="submit"
                   className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
-                  style={{ fontWeight: 400 }}
+                  style={{
+                    fontWeight: 400,
+                  }}
                 >
                   {editingItem
                     ? "Save changes"
                     : "Add item"}
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/* =========================================================
-   STAT COMPONENT
-========================================================= */
-
-function Stat({
-  label,
-  value,
-  warning = false,
-}: {
-  label: string;
-  value: string | number;
-  warning?: boolean;
-}) {
-  return (
-    <div className="bg-white p-5">
-      <p className="text-xs uppercase tracking-wide text-gray-400">
-        {label}
-      </p>
-
-      <p
-        className={`mt-2 text-2xl ${
-          warning ? "text-red-500" : "text-gray-900"
-        }`}
-        style={{ fontWeight: 300 }}
-      >
-        {value}
-      </p>
     </div>
   );
 }
