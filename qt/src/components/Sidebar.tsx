@@ -381,7 +381,7 @@ export default function Sidebar({
           {/* Account Dropdown */}
           {accountOpen && (
             <div
-              className={`absolute bottom-full z-50 mb-2 rounded-lg border border-gray-100 bg-white py-1 shadow-lg ${
+              className={`absolute bottom-full z-50 mb-2 rounded-full border border-gray-100 bg-white py-1 shadow-lg ${
                 collapsed
                   ? "left-0 w-40"
                   : "left-0 w-full min-w-[10rem]"
@@ -391,7 +391,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-red-600"
+                className="flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-red-600"
                 role="menuitem"
               >
                 <LogOut className="h-4 w-4" />

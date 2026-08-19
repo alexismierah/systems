@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Package,
   Plus,
@@ -8,8 +8,9 @@ import {
   Pencil,
   Trash2,
   X,
-  SlidersHorizontal,
   FolderPlus,
+  ChevronDown,
+  MoreVertical,
 } from "lucide-react";
 
 type InventoryItem = {
@@ -24,13 +25,17 @@ type InventoryItem = {
 const fontStack =
   "'Avenir Light', 'Avenir Next Light', Avenir, 'Century Gothic', sans-serif";
 
+const teal = "#0F766E";
+
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+
+  const [subtabsExpanded, setSubtabsExpanded] = useState(true);
+  const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -50,6 +55,8 @@ export default function InventoryPage() {
     quantity: "",
     price: "",
   });
+
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   // --------------------------------------------------
   // LOAD DATA
@@ -77,6 +84,31 @@ export default function InventoryPage() {
       }
     }
   }, []);
+
+  // --------------------------------------------------
+  // CLOSE SUBTAB MENU ON OUTSIDE CLICK
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (!openMenuFor) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
+      ) {
+        setOpenMenuFor(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+  }, [openMenuFor]);
 
   // --------------------------------------------------
   // SAVE INVENTORY
@@ -118,6 +150,7 @@ export default function InventoryPage() {
     setEditingCategory(category);
     setCategoryName(category);
     setShowCategoryModal(true);
+    setOpenMenuFor(null);
   };
 
   const closeCategoryModal = () => {
@@ -172,10 +205,6 @@ export default function InventoryPage() {
       if (activeCategory === editingCategory) {
         setActiveCategory(name);
       }
-
-      if (categoryFilter === editingCategory) {
-        setCategoryFilter(name);
-      }
     }
 
     // CREATE SUBTAB
@@ -188,7 +217,6 @@ export default function InventoryPage() {
       saveCategories(updatedCategories);
 
       setActiveCategory(name);
-      setCategoryFilter(name);
     }
 
     closeCategoryModal();
@@ -199,6 +227,8 @@ export default function InventoryPage() {
   // --------------------------------------------------
 
   const deleteCategory = (category: string) => {
+    setOpenMenuFor(null);
+
     const itemCount = items.filter(
       (item) => item.category === category
     ).length;
@@ -230,17 +260,12 @@ export default function InventoryPage() {
 
     if (updatedCategories.length === 0) {
       setActiveCategory("All");
-      setCategoryFilter("All");
       setSearch("");
       return;
     }
 
     if (activeCategory === category) {
       setActiveCategory("All");
-    }
-
-    if (categoryFilter === category) {
-      setCategoryFilter("All");
     }
   };
 
@@ -262,22 +287,9 @@ export default function InventoryPage() {
         activeCategory === "All" ||
         item.category === activeCategory;
 
-      const matchesCategory =
-        categoryFilter === "All" ||
-        item.category === categoryFilter;
-
-      return (
-        matchesSearch &&
-        matchesTab &&
-        matchesCategory
-      );
+      return matchesSearch && matchesTab;
     });
-  }, [
-    items,
-    search,
-    activeCategory,
-    categoryFilter,
-  ]);
+  }, [items, search, activeCategory]);
 
   // --------------------------------------------------
   // ADD ITEM
@@ -456,7 +468,7 @@ export default function InventoryPage() {
       <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div>
           <h1
-            className="text-2xl tracking-tight text-gray-900"
+            className="text-2xl tracking-tight text-[#101828]"
             style={{
               fontWeight: 300,
             }}
@@ -464,32 +476,24 @@ export default function InventoryPage() {
             Inventory
           </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-[#667085]">
             Manage your products, stock, and pricing.
           </p>
         </div>
 
         {categories.length > 0 && (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={openCreateCategory}
-              className="flex h-11 items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 text-sm text-gray-700 transition hover:bg-gray-50"
-            >
-              <FolderPlus className="h-4 w-4" />
-              Create Subtab
-            </button>
-
+          <div className="flex gap-2.5">
             <button
               type="button"
               onClick={openAddModal}
-              className="flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
+              className="flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[13.5px] text-white transition hover:opacity-90"
               style={{
-                fontWeight: 400,
+                fontWeight: 500,
+                backgroundColor: teal,
               }}
             >
-              <Plus className="h-4 w-4" />
-              Add Item
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Add item
             </button>
           </div>
         )}
@@ -497,20 +501,20 @@ export default function InventoryPage() {
 
       {/* ==================================================
           NO SUBTAB STATE
-
-          IMPORTANT:
-          There is NO inventory table here.
       ================================================== */}
 
       {categories.length === 0 ? (
-        <div className="flex min-h-[520px] items-center justify-center">
+        <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-dashed border-[#DBDFE6]">
           <div className="mx-auto max-w-md px-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
-              <FolderPlus className="h-7 w-7 text-gray-400" />
+            <div
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: `${teal}0F` }}
+            >
+              <FolderPlus className="h-7 w-7" style={{ color: teal }} strokeWidth={1.5} />
             </div>
 
             <h2
-              className="mt-6 text-lg text-gray-900"
+              className="mt-6 text-lg text-[#101828]"
               style={{
                 fontWeight: 400,
               }}
@@ -518,7 +522,7 @@ export default function InventoryPage() {
               Create a subtab first
             </h2>
 
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500">
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#667085]">
               Before adding inventory items,
               create a subtab to organize your
               products.
@@ -527,307 +531,291 @@ export default function InventoryPage() {
             <button
               type="button"
               onClick={openCreateCategory}
-              className="mx-auto mt-6 flex h-11 items-center justify-center gap-2 rounded-full bg-gray-900 px-6 text-sm text-white transition hover:bg-black"
+              className="mx-auto mt-6 flex h-11 items-center justify-center gap-2 rounded-full px-6 text-sm text-white transition hover:opacity-90"
               style={{
                 fontWeight: 400,
+                backgroundColor: teal,
               }}
             >
               <Plus className="h-4 w-4" />
-              Create Subtab
+              Create subtab
             </button>
           </div>
         </div>
       ) : (
-        <>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[192px_minmax(0,1fr)]">
           {/* ==================================================
-              SUBTABS
+              SUBTAB SIDEBAR
+
+              No surrounding panel — small, flat list like a
+              file tree. "All" collapses/expands the subtabs.
           ================================================== */}
 
-          <div className="mb-6">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              {/* ALL */}
-
-              <button
-                type="button"
-                onClick={() => {
+          <nav className="lg:pt-1">
+            <button
+              type="button"
+              onClick={() =>
+                setSubtabsExpanded(!subtabsExpanded)
+              }
+              className={`flex w-full items-center gap-2 rounded-full px-2.5 py-2 text-[13.5px] transition ${
+                activeCategory === "All"
+                  ? "text-[#101828]"
+                  : "text-[#475467] hover:bg-[#F2F4F7]"
+              }`}
+              style={{ fontWeight: 500 }}
+            >
+              <span
+                className="flex-1 cursor-pointer text-left"
+                onClick={(e) => {
+                  e.stopPropagation();
                   setActiveCategory("All");
-                  setCategoryFilter("All");
                 }}
-                className={`flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition ${
-                  activeCategory === "All"
-                    ? "bg-gray-900 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                }`}
               >
                 All
+              </span>
 
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] ${
-                    activeCategory === "All"
-                      ? "bg-white/15 text-white"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
+              <ChevronDown
+                className={`h-3.5 w-3.5 shrink-0 text-[#98A2B3] transition-transform ${
+                  subtabsExpanded ? "" : "-rotate-90"
+                }`}
+              />
+            </button>
+
+            {subtabsExpanded && (
+              <div className="mt-0.5 space-y-0.5 pl-1">
+                {categories.map((category) => {
+                  const isActive = activeCategory === category;
+                  const isMenuOpen = openMenuFor === category;
+
+                  return (
+                    <div key={category} className="group relative">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCategory(category)}
+                        className="flex w-full items-center gap-2 rounded-full py-2 pl-4 pr-8 text-left text-[13.5px] transition"
+                        style={{
+                          backgroundColor: isActive
+                            ? `${teal}17`
+                            : "transparent",
+                          color: isActive ? teal : "#475467",
+                          fontWeight: isActive ? 500 : 400,
+                        }}
+                      >
+                        <span className="flex-1 truncate">
+                          {category}
+                        </span>
+                      </button>
+
+                      {/* SUBTAB MENU TRIGGER */}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenMenuFor(
+                            isMenuOpen ? null : category
+                          )
+                        }
+                        className={`absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1 transition ${
+                          isActive || isMenuOpen
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100"
+                        }`}
+                        style={{
+                          color: isActive ? teal : "#98A2B3",
+                        }}
+                      >
+                        <MoreVertical className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* SUBTAB MENU */}
+
+                      {isMenuOpen && (
+                        <div
+                          ref={menuRef}
+                          className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-xl border border-[#E4E7EC] bg-white py-1 shadow-lg"
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openEditCategory(category)
+                            }
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#344054] transition hover:bg-[#F9FAFB]"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Rename
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              deleteCategory(category)
+                            }
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#B42318] transition hover:bg-[#FEF3F2]"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* NEW SUBTAB */}
+
+                <button
+                  type="button"
+                  onClick={openCreateCategory}
+                  className="flex w-full items-center gap-2 rounded-full py-2 pl-4 pr-3 text-[13px] text-[#98A2B3] transition hover:text-[#475467]"
                 >
-                  {getCategoryCount("All")}
-                </span>
-              </button>
-
-              {/* CATEGORY SUBTABS */}
-
-              {categories.map((category) => (
-                <div
-                  key={category}
-                  className="group relative flex shrink-0 items-center"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveCategory(category);
-                      setCategoryFilter(category);
-                    }}
-                    className={`flex h-10 items-center gap-2 rounded-full px-4 pr-20 text-sm transition ${
-                      activeCategory === category
-                        ? "bg-gray-900 text-white"
-                        : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    {category}
-
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] ${
-                        activeCategory === category
-                          ? "bg-white/15 text-white"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {getCategoryCount(category)}
-                    </span>
-                  </button>
-
-                  {/* SUBTAB ACTIONS */}
-
-                  <div className="absolute right-2 hidden items-center gap-0.5 group-hover:flex">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openEditCategory(category)
-                      }
-                      className="rounded-full p-1.5 text-gray-400 hover:bg-white/20 hover:text-current"
-                      title="Edit subtab"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        deleteCategory(category)
-                      }
-                      className="rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                      title="Delete subtab"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {/* NEW SUBTAB */}
-
-              <button
-                type="button"
-                onClick={openCreateCategory}
-                className="flex h-10 shrink-0 items-center gap-2 rounded-full border border-dashed border-gray-300 px-4 text-sm text-gray-400 transition hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
-              >
-                <Plus className="h-4 w-4" />
-                New Subtab
-              </button>
-            </div>
-          </div>
+                  <Plus className="h-3.5 w-3.5" />
+                  New subtab
+                </button>
+              </div>
+            )}
+          </nav>
 
           {/* ==================================================
-              INVENTORY CONTENT
-
-              No white panel around the table.
+              INVENTORY TABLE
           ================================================== */}
 
-          <div>
+          <div className="min-w-0 overflow-hidden rounded-xl border border-[#E4E7EC] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
             {/* TOOLBAR */}
 
-            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-4 border-b border-[#E4E7EC] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2
-                  className="text-base text-gray-900"
+                  className="text-[15px] text-[#101828]"
                   style={{
-                    fontWeight: 400,
+                    fontWeight: 500,
                   }}
                 >
                   {activeCategory === "All"
-                    ? "Inventory Items"
+                    ? "Inventory items"
                     : activeCategory}
                 </h2>
 
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-0.5 text-[13px] text-[#667085]">
                   {filteredItems.length}{" "}
                   {filteredItems.length === 1
                     ? "item"
-                    : "items"}
+                    : "items"}{" "}
+                  listed
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {/* SEARCH */}
+              {/* SEARCH */}
 
-                <div className="relative sm:w-72">
-                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div className="relative sm:w-72">
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
 
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={(e) =>
-                      setSearch(e.target.value)
-                    }
-                    placeholder="Search inventory"
-                    className="h-10 w-full rounded-full border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
-                  />
-                </div>
-
-                {/* FILTER */}
-
-                <div className="relative">
-                  <SlidersHorizontal className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      setCategoryFilter(value);
-                      setActiveCategory(value);
-                    }}
-                    className="h-10 w-full appearance-none rounded-full border border-gray-200 bg-gray-50 pl-10 pr-9 text-sm text-gray-700 outline-none transition focus:border-gray-900 focus:bg-white sm:w-40"
-                  >
-                    <option value="All">
-                      All Categories
-                    </option>
-
-                    {categories.map((category) => (
-                      <option
-                        key={category}
-                        value={category}
-                      >
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                  placeholder="Search by name, SKU, category"
+                  className="h-10 w-full rounded-full border border-[#DBDFE6] bg-white pl-10 pr-4 text-[13.5px] outline-none transition placeholder:text-[#98A2B3] focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/10"
+                />
               </div>
             </div>
 
             {/* TABLE */}
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px] text-left text-sm">
+              <table className="w-full min-w-[720px] text-left text-[13.5px]">
                 <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                  <tr className="border-b border-[#E4E7EC] bg-[#FAFAFB]">
+                    <th className="px-6 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                       Product
                     </th>
 
-                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                    <th className="px-6 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                       SKU
                     </th>
 
-                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                    <th className="px-6 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                       Category
                     </th>
 
-                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
+                    <th className="px-6 py-3 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                       Stock
                     </th>
 
-                    <th className="px-6 py-3 text-xs font-light uppercase tracking-wide text-gray-400">
-                      Price
+                    <th className="px-6 py-3 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
+                      Unit price
                     </th>
 
-                    <th className="px-6 py-3 text-right text-xs font-light uppercase tracking-wide text-gray-400">
+                    <th className="px-6 py-3 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                       Actions
                     </th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#F2F4F7]">
                   {filteredItems.map((item) => (
                     <tr
                       key={item.id}
-                      className="transition hover:bg-gray-50/60"
+                      className="transition hover:bg-[#FAFAFB]"
                     >
                       {/* PRODUCT */}
 
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
-                            <Package className="h-4 w-4 text-gray-500" />
-                          </div>
-
-                          <div>
-                            <p
-                              className="text-gray-900"
-                              style={{
-                                fontWeight: 400,
-                              }}
-                            >
-                              {item.name}
-                            </p>
-
-                            <p className="mt-0.5 text-xs text-gray-400">
-                              Product
-                            </p>
-                          </div>
-                        </div>
+                      <td className="px-6 py-4">
+                        <p
+                          className="text-[#101828]"
+                          style={{
+                            fontWeight: 400,
+                          }}
+                        >
+                          {item.name}
+                        </p>
                       </td>
 
                       {/* SKU */}
 
-                      <td className="px-6 py-5 text-gray-500">
+                      <td className="px-6 py-4 font-mono text-[12.5px] text-[#667085]">
                         {item.sku}
                       </td>
 
                       {/* CATEGORY */}
 
-                      <td className="px-6 py-5">
-                        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                      <td className="px-6 py-4">
+                        <span className="rounded-full border border-[#E4E7EC] bg-[#F9FAFB] px-3 py-1 text-[12px] text-[#475467]">
                           {item.category}
                         </span>
                       </td>
 
                       {/* STOCK */}
 
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={
-                              item.quantity <= 5
-                                ? "text-red-600"
-                                : item.quantity <= 10
-                                  ? "text-amber-600"
-                                  : "text-gray-700"
-                            }
-                          >
-                            {item.quantity}
-                          </span>
-
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
                           {item.quantity <= 5 && (
-                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] text-red-500">
+                            <span className="rounded-full bg-[#FEF3F2] px-2 py-0.5 text-[11px] text-[#B42318]">
                               Low
                             </span>
                           )}
+
+                          <span
+                            className="tabular-nums"
+                            style={{
+                              color:
+                                item.quantity <= 5
+                                  ? "#B42318"
+                                  : item.quantity <= 10
+                                    ? "#B54708"
+                                    : "#344054",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {item.quantity}
+                          </span>
                         </div>
                       </td>
 
                       {/* PRICE */}
 
-                      <td className="px-6 py-5 text-gray-700">
+                      <td className="px-6 py-4 text-right tabular-nums text-[#344054]">
                         ₱
                         {item.price.toLocaleString(
                           undefined,
@@ -840,17 +828,17 @@ export default function InventoryPage() {
 
                       {/* ACTIONS */}
 
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-4">
                         <div className="flex justify-end gap-1">
                           <button
                             type="button"
                             onClick={() =>
                               openEditModal(item)
                             }
-                            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                            className="rounded-full p-2 text-[#98A2B3] transition hover:bg-[#F2F4F7] hover:text-[#101828]"
                             title="Edit"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" strokeWidth={1.75} />
                           </button>
 
                           <button
@@ -858,10 +846,10 @@ export default function InventoryPage() {
                             onClick={() =>
                               deleteItem(item.id)
                             }
-                            className="rounded-full p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                            className="rounded-full p-2 text-[#98A2B3] transition hover:bg-red-50 hover:text-red-600"
                             title="Delete"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
                           </button>
                         </div>
                       </td>
@@ -876,12 +864,12 @@ export default function InventoryPage() {
                         colSpan={6}
                         className="px-6 py-20 text-center"
                       >
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                          <Package className="h-5 w-5 text-gray-400" />
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#F2F4F7]">
+                          <Package className="h-5 w-5 text-[#98A2B3]" strokeWidth={1.5} />
                         </div>
 
                         <p
-                          className="mt-4 text-sm text-gray-700"
+                          className="mt-4 text-sm text-[#101828]"
                           style={{
                             fontWeight: 400,
                           }}
@@ -889,19 +877,10 @@ export default function InventoryPage() {
                           No inventory items
                         </p>
 
-                        <p className="mt-1 text-sm text-gray-400">
+                        <p className="mt-1 text-sm text-[#667085]">
                           Add an item to this
                           subtab to get started.
                         </p>
-
-                        <button
-                          type="button"
-                          onClick={openAddModal}
-                          className="mx-auto mt-5 flex h-10 items-center gap-2 rounded-full bg-gray-900 px-5 text-sm text-white transition hover:bg-black"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add Item
-                        </button>
                       </td>
                     </tr>
                   )}
@@ -909,7 +888,7 @@ export default function InventoryPage() {
               </table>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ==================================================
@@ -925,14 +904,14 @@ export default function InventoryPage() {
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+            <div className="flex items-center justify-between border-b border-[#E4E7EC] px-6 py-5">
               <div>
-                <p className="text-xs uppercase tracking-wider text-gray-400">
+                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                   Inventory
                 </p>
 
                 <h2
-                  className="mt-1 text-lg text-gray-900"
+                  className="mt-1 text-lg text-[#101828]"
                   style={{
                     fontWeight: 300,
                   }}
@@ -946,7 +925,7 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={closeCategoryModal}
-                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-full p-2 text-[#98A2B3] transition hover:bg-[#F2F4F7] hover:text-[#101828]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -957,7 +936,7 @@ export default function InventoryPage() {
               className="space-y-5 p-6"
             >
               <div>
-                <label className="mb-1.5 block text-xs text-gray-500">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.06em] text-[#667085]">
                   Subtab name
                 </label>
 
@@ -969,12 +948,12 @@ export default function InventoryPage() {
                   }
                   placeholder="e.g. Artificial Flowers"
                   autoFocus
-                  className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+                  className="h-11 w-full rounded-full border border-[#DBDFE6] bg-[#F9FAFB] px-5 text-[14px] text-[#101828] outline-none transition placeholder:text-[#98A2B3] focus:border-[#0F766E] focus:bg-white focus:ring-2 focus:ring-[#0F766E]/10"
                 />
               </div>
 
-              <div className="rounded-xl bg-gray-50 p-4">
-                <p className="text-xs leading-5 text-gray-500">
+              <div className="rounded-xl bg-[#F9FAFB] p-4">
+                <p className="text-[12.5px] leading-5 text-[#667085]">
                   Create a subtab to organize your
                   inventory. You can add products under
                   each subtab.
@@ -985,21 +964,22 @@ export default function InventoryPage() {
                 <button
                   type="button"
                   onClick={closeCategoryModal}
-                  className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-600 transition hover:bg-gray-50"
+                  className="h-11 flex-1 rounded-full border border-[#DBDFE6] text-[13.5px] text-[#475467] transition hover:bg-[#F9FAFB]"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
+                  className="h-11 flex-1 rounded-full text-[13.5px] text-white transition hover:opacity-90"
                   style={{
-                    fontWeight: 400,
+                    fontWeight: 500,
+                    backgroundColor: teal,
                   }}
                 >
                   {editingCategory
                     ? "Save changes"
-                    : "Create Subtab"}
+                    : "Create subtab"}
                 </button>
               </div>
             </form>
@@ -1020,14 +1000,14 @@ export default function InventoryPage() {
             className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+            <div className="flex items-center justify-between border-b border-[#E4E7EC] px-6 py-5">
               <div>
-                <p className="text-xs uppercase tracking-wider text-gray-400">
+                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[#98A2B3]">
                   Inventory
                 </p>
 
                 <h2
-                  className="mt-1 text-lg text-gray-900"
+                  className="mt-1 text-lg text-[#101828]"
                   style={{
                     fontWeight: 300,
                   }}
@@ -1041,7 +1021,7 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-full p-2 text-[#98A2B3] transition hover:bg-[#F2F4F7] hover:text-[#101828]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1078,7 +1058,7 @@ export default function InventoryPage() {
               {/* SUBTAB */}
 
               <div>
-                <label className="mb-1.5 block text-xs text-gray-500">
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.06em] text-[#667085]">
                   Subtab
                 </label>
 
@@ -1090,7 +1070,7 @@ export default function InventoryPage() {
                       category: e.target.value,
                     })
                   }
-                  className="h-11 w-full appearance-none rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+                  className="h-11 w-full appearance-none rounded-full border border-[#DBDFE6] bg-[#F9FAFB] px-5 text-[14px] text-[#101828] outline-none transition focus:border-[#0F766E] focus:bg-white focus:ring-2 focus:ring-[#0F766E]/10"
                 >
                   {categories.map((category) => (
                     <option
@@ -1135,16 +1115,17 @@ export default function InventoryPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="h-11 flex-1 rounded-full border border-gray-200 text-sm text-gray-600 transition hover:bg-gray-50"
+                  className="h-11 flex-1 rounded-full border border-[#DBDFE6] text-[13.5px] text-[#475467] transition hover:bg-[#F9FAFB]"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="h-11 flex-1 rounded-full bg-gray-900 text-sm text-white transition hover:bg-black"
+                  className="h-11 flex-1 rounded-full text-[13.5px] text-white transition hover:opacity-90"
                   style={{
-                    fontWeight: 400,
+                    fontWeight: 500,
+                    backgroundColor: teal,
                   }}
                 >
                   {editingItem
@@ -1179,7 +1160,7 @@ function Input({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs text-gray-500">
+      <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.06em] text-[#667085]">
         {label}
       </label>
 
@@ -1196,7 +1177,7 @@ function Input({
           onChange(e.target.value)
         }
         placeholder={placeholder}
-        className="h-11 w-full rounded-full border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:ring-2 focus:ring-gray-900/10"
+        className="h-11 w-full rounded-full border border-[#DBDFE6] bg-[#F9FAFB] px-5 text-[14px] text-[#101828] outline-none transition placeholder:text-[#98A2B3] focus:border-[#0F766E] focus:bg-white focus:ring-2 focus:ring-[#0F766E]/10"
       />
     </div>
   );
