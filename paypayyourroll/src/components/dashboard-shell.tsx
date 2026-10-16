@@ -1,90 +1,103 @@
-
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-type Role = "admin" | "employee";
-
-type Props = {
-  role: Role;
+type DashboardShellProps = {
+  role: "admin" | "employee";
   name: string;
   children: ReactNode;
 };
 
-const menus = {
-  admin: [
-    { label: "Dashboard", href: "/admin/dashboard" },
-    { label: "Employees", href: "/admin/employees" },
-    { label: "Payroll", href: "/admin/payroll" },
-    { label: "Attendance", href: "/admin/attendance" },
-    { label: "Reports", href: "/admin/reports" },
-  ],
-  employee: [
-    { label: "Dashboard", href: "/employee/dashboard" },
-    { label: "My Profile", href: "/employee/profile" },
-    { label: "My Payslips", href: "/employee/payslips" },
-    { label: "My Attendance", href: "/employee/attendance" },
-    { label: "My Leave", href: "/employee/leave" },
-  ],
-};
+const adminLinks = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: "▦" },
+  { label: "Employees", href: "/admin/employees", icon: "♙" },
+  { label: "Payroll", href: "/admin/payroll", icon: "₱" },
+  { label: "Attendance", href: "/admin/attendance", icon: "◷" },
+  { label: "Reports", href: "/admin/reports", icon: "▤" },
+];
+
+const employeeLinks = [
+  { label: "Dashboard", href: "/employee/dashboard", icon: "▦" },
+  { label: "My Profile", href: "/employee/profile", icon: "♙" },
+  { label: "My Payslips", href: "/employee/payslips", icon: "₱" },
+  { label: "My Attendance", href: "/employee/attendance", icon: "◷" },
+  { label: "My Leave", href: "/employee/leave", icon: "▤" },
+];
 
 export default function DashboardShell({
   role,
   name,
   children,
-}: Props) {
+}: DashboardShellProps) {
+  const links = role === "admin" ? adminLinks : employeeLinks;
+
   return (
     <div className="min-h-screen bg-slate-50 md:flex">
-      <aside className="w-full border-b border-slate-200 bg-white md:min-h-screen md:w-64 md:shrink-0 md:border-b-0 md:border-r">
-        <div className="border-b border-slate-100 px-6 py-5">
-          <Link
-            href={`/${role}/dashboard`}
-            className="text-xl font-bold tracking-tight text-slate-900"
-          >
-            PayPay<span className="text-blue-600">YourRoll</span>
+      <aside className="flex w-full flex-col bg-slate-950 text-white md:fixed md:inset-y-0 md:w-64">
+        <div className="border-b border-white/10 px-6 py-6">
+          <Link href={`/${role}/dashboard`} className="text-xl font-bold">
+            PayPay<span className="text-blue-400">YourRoll</span>
           </Link>
-          <p className="mt-1 text-xs text-slate-500">
-            {role === "admin" ? "Administrator Portal" : "Employee Portal"}
+          <p className="mt-2 text-xs uppercase tracking-widest text-slate-400">
+            {role === "admin" ? "Admin Portal" : "Employee Portal"}
           </p>
         </div>
 
-        <nav className="flex gap-2 overflow-x-auto p-3 md:flex-col">
-          {menus[role].map((item) => (
+        <nav className="flex gap-2 overflow-x-auto p-3 md:flex-1 md:flex-col md:overflow-visible">
+          {links.map((link) => (
             <Link
-              key={item.href}
-              href={item.href}
-              className="shrink-0 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+              key={link.href}
+              href={link.href}
+              className="flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
-              {item.label}
+              <span className="w-5 text-center text-lg">{link.icon}</span>
+              {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="border-t border-slate-100 p-4">
-          <form action="/auth/signout" method="post">
+        <div className="hidden border-t border-white/10 p-5 md:block">
+          <p className="truncate text-sm font-medium">{name}</p>
+          <p className="mt-1 text-xs capitalize text-slate-400">{role}</p>
+
+          <form action="/auth/signout" method="POST" className="mt-4">
             <button
               type="submit"
-              className="w-full rounded-lg px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+              className="w-full rounded-lg border border-white/15 px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/10 hover:text-white"
             >
-              Sign Out
+              Sign out
             </button>
           </form>
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-5 md:px-8">
+      <main className="min-w-0 flex-1 p-5 sm:p-8 md:ml-64">
+        <div className="mb-8 flex items-center justify-between border-b border-slate-200 pb-5">
           <div>
-            <p className="text-xs text-slate-500">Signed in as</p>
-            <p className="font-semibold text-slate-900">{name}</p>
+            <p className="text-sm text-slate-500">PayPayYourRoll</p>
+            <p className="mt-1 font-semibold text-slate-800">
+              {role === "admin" ? "Administration" : "Employee Workspace"}
+            </p>
           </div>
 
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold capitalize text-blue-700">
-            {role}
-          </span>
-        </header>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div className="hidden sm:block">
+              <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
+                {name}
+              </p>
+              <p className="text-xs capitalize text-slate-500">{role}</p>
+            </div>
+          </div>
+        </div>
 
-        <main className="p-5 md:p-8">{children}</main>
-      </div>
+        {children}
+
+        <footer className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-400">
+          © {new Date().getFullYear()} PayPayYourRoll
+        </footer>
+      </main>
     </div>
   );
 }
