@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "electron": "electron .",
+    "app:dev": "concurrently -k \"pnpm dev\" \"wait-on http://localhost:3000 && pnpm electron\"",
+    "type": "module",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
