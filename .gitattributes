@@ -4,3 +4,4 @@ Desktop[[:space:]]App[[:space:]].exe filter=lfs diff=lfs merge=lfs -text
 node_modules/next-swc.win32-x64-msvc.node filter=lfs diff=lfs merge=lfs -text
 release/Desktop[[:space:]]App[[:space:]]Setup[[:space:]]0.1.0.exe filter=lfs diff=lfs merge=lfs -text
 release/Desktop[[:space:]]App.exe filter=lfs diff=lfs merge=lfs -text
+release/win/win-unpacked/Desktop[[:space:]]App.exe filter=lfs diff=lfs merge=lfs -text
