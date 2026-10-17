@@ -2,11 +2,13 @@
   "name": "showmethemoney",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+"scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "eslint",
+  "electron": "electron .",
+  "electron:dev": "concurrently -k \"pnpm dev\" \"wait-on http://localhost:3000 && electron .\""
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -31,5 +33,6 @@
     "typescript": "^5",
     "wait-on": "^9.5.1"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.11.2",
+  "main": "electron/main.js"
 }
