@@ -65,22 +65,6 @@ export default function Home() {
         aria-hidden="true"
         className="pointer-events-none absolute -top-44 left-1/2 h-[460px] w-[760px] -translate-x-1/2 rounded-full bg-[#e9e3ff] opacity-70 blur-3xl"
       />
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 sm:px-10">
-        <a href="#" className="flex items-center gap-2.5" aria-label="QR Studio home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6d4aff] text-white shadow-lg shadow-[#6d4aff]/20">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-              <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z" stroke="currentColor" strokeWidth="2" />
-              <path d="M14 14h3v3h-3zM19 14v2M17 19h3M14 19v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </span>
-          <span className="text-[15px] font-bold tracking-tight">qr<span className="text-[#7659eb]">studio</span></span>
-        </a>
-        <span className="hidden items-center gap-2 rounded-full border border-[#e9e6f2] bg-white/70 px-3.5 py-2 text-xs font-medium text-[#6d687c] sm:flex">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#35b888]" />
-          Free forever · No sign-up
-        </span>
-      </header>
-
       <section className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 pb-12 pt-10 sm:px-10 sm:pt-16">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e7e2f4] bg-white/70 px-3.5 py-1.5 text-xs font-semibold text-[#6e52d9]">
