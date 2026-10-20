@@ -125,18 +125,6 @@ export default function Home() {
                 </svg>
                 Download QR code
               </button>
-              <button
-                type="button"
-                onClick={copyContent}
-                disabled={!value}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#e9e7ef] bg-white/80 px-5 text-sm font-semibold text-[#575366] transition hover:-translate-y-0.5 hover:border-[#cfc6f5] hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7659eb]/15 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
-              >
-                <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
-                  <rect x="7" y="6" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-                  <path d="M13 6V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v9A1.5 1.5 0 0 0 4.5 15H7" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
-                {copied ? "Copied!" : "Copy text"}
-              </button>
             </div>
             <p className="mt-4 text-center text-xs text-[#a09bad]">Your content stays in your browser. Nothing is stored.</p>
           </section>
@@ -165,26 +153,10 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              <div className="mt-5 flex items-center gap-2 text-xs font-medium text-[#898496]">
-                <span className="h-2 w-2 rounded-full bg-[#35b888]" />
-                High error correction · 320 × 320px
-              </div>
             </div>
 
-            <div className="mt-5 flex items-center gap-3 px-4 py-3.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f4f1ff] text-[#7659eb]">
-                <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]" aria-hidden="true">
-                  <path d="m10 2 1.9 5.8L18 10l-6.1 2.2L10 18l-1.9-5.8L2 10l6.1-2.2L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <div>
-                <p className="text-xs font-semibold text-[#514c60]">Crisp at every size</p>
-                <p className="mt-0.5 text-[11px] leading-4 text-[#9691a3]">Your code is ready for screens or print.</p>
-              </div>
-            </div>
           </section>
         </div>
-        <footer className="mt-12 text-center text-xs tracking-wide text-[#a09bad]">Simple, free QR codes. Made for sharing.</footer>
       </section>
     </main>
   );
