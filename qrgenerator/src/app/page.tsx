@@ -5,9 +5,13 @@ import QRCode from "qrcode";
 
 export default function Home() {
   const [value, setValue] = useState("https://qrcode.studio");
+  const [qrColor, setQrColor] = useState("#171525");
+  const [colorInput, setColorInput] = useState("#171525");
+  const [transparentBackground, setTransparentBackground] = useState(false);
   const [qrImage, setQrImage] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const isValidColor = /^#[\da-fA-F]{6}$/.test(colorInput);
 
   useEffect(() => {
     let isCurrent = true;
@@ -18,7 +22,7 @@ export default function Home() {
       width: 320,
       margin: 2,
       errorCorrectionLevel: "H",
-      color: { dark: "#171525", light: "#ffffff" },
+      color: { dark: qrColor, light: transparentBackground ? "#ffffff00" : "#ffffff" },
     })
       .then((image) => {
         if (isCurrent) {
@@ -36,10 +40,10 @@ export default function Home() {
     return () => {
       isCurrent = false;
     };
-  }, [value]);
+  }, [value, qrColor, transparentBackground]);
 
   const downloadQr = () => {
-    if (!qrImage) return;
+    if (!qrImage || !isValidColor) return;
     const link = document.createElement("a");
     link.href = qrImage;
     link.download = "qrcode.png";
@@ -107,6 +111,60 @@ export default function Home() {
               </span>
             </div>
 
+            <div className="mt-5">
+              <label htmlFor="qr-color" className="mb-2 block text-sm font-semibold text-[#383548]">
+                QR code color
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="qr-color-picker"
+                  type="color"
+                  value={qrColor}
+                  onChange={(event) => {
+                    const nextColor = event.target.value.toUpperCase();
+                    setQrColor(nextColor);
+                    setColorInput(nextColor);
+                  }}
+                  aria-label="Choose QR code color"
+                  className="h-11 w-14 cursor-pointer rounded-lg border border-[#e9e7ef] bg-white p-1"
+                />
+                <input
+                  id="qr-color"
+                  type="text"
+                  value={colorInput}
+                  onChange={(event) => {
+                    const nextColor = event.target.value;
+                    setColorInput(nextColor);
+                    if (/^#[\da-fA-F]{6}$/.test(nextColor)) {
+                      setQrColor(nextColor.toUpperCase());
+                    }
+                  }}
+                  maxLength={7}
+                  placeholder="#171525"
+                  aria-invalid={!isValidColor}
+                  aria-describedby="qr-color-hint"
+                  className="h-11 w-32 rounded-xl border border-[#e9e7ef] bg-white/80 px-3 text-sm uppercase text-[#29263a] outline-none transition placeholder:text-[#b5b1c1] focus:border-[#927bfa] focus:ring-4 focus:ring-[#7659eb]/10 aria-invalid:border-[#d47b73]"
+                />
+                <span className="text-sm text-[#8b8798]">Pick a color or enter a hex value</span>
+              </div>
+              <p id="qr-color-hint" className={`mt-2 text-xs ${isValidColor ? "text-[#a09bad]" : "text-[#b5473b]"}`}>
+                {isValidColor ? "Choose any color for the QR code." : "Enter a 6-digit hex color, such as #6D4AFF."}
+              </p>
+            </div>
+
+            <label className="mt-5 flex cursor-pointer items-center gap-3 text-sm font-medium text-[#383548]">
+              <input
+                type="checkbox"
+                checked={transparentBackground}
+                onChange={(event) => setTransparentBackground(event.target.checked)}
+                className="h-4 w-4 accent-[#6d4aff] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7659eb]/20"
+              />
+              Transparent background
+            </label>
+            <p className="ml-7 mt-1 text-xs text-[#a09bad]">
+              Turn off for a solid white background.
+            </p>
+
             {error && (
               <p role="alert" className="mt-4 rounded-xl bg-[#fff1f0] px-3.5 py-2.5 text-sm text-[#b5473b]">
                 {error}
@@ -117,7 +175,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={downloadQr}
-                disabled={!qrImage}
+                disabled={!qrImage || !isValidColor}
                 className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#6d4aff] px-5 text-sm font-semibold text-white shadow-lg shadow-[#6d4aff]/20 transition hover:-translate-y-0.5 hover:bg-[#5c3de0] hover:shadow-xl hover:shadow-[#6d4aff]/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7659eb]/20 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
               >
                 <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
