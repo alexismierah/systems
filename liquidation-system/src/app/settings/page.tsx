@@ -590,24 +590,6 @@ export default function SettingsPage() {
                   </button>
                 </form>
               </section>
-
-              {/* Privacy */}
-              <section className={cardClass}>
-                <div className="flex items-start gap-4">
-                  <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#dff3e5] text-[#3f9e5f]">
-                    <ShieldCheck size={22} />
-                  </div>
-                  <div className="min-w-0 pt-0.5">
-                    <h2 className="text-[15px] text-[#6b6f76]">
-                      Account Privacy
-                    </h2>
-                    <p className="mt-2 text-[14px] text-[#4a4e55]">
-                      Your categories and liquidation records are private to
-                      your account.
-                    </p>
-                  </div>
-                </div>
-              </section>
             </div>
           </div>
         )}

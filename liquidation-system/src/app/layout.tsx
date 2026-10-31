@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Liquidation Management System",
-  description: "Manage your categories and liquidation records.",
+  title: "Expensive Man Oy!",
+  description: "Manage your expense.",
 };
 
 export default function RootLayout({

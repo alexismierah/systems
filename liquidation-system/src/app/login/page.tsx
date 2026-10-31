@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Hanken_Grotesk } from "next/font/google";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Wallet,
   Eye,
   EyeOff,
   Loader2,
@@ -189,12 +188,17 @@ export default function LoginPage() {
       />
 
       {/* ---------------- Logo ---------------- */}
-      <div className="absolute left-7 top-7 z-20 flex items-center gap-2 sm:left-8">
-        <Wallet size={26} strokeWidth={1.6} className="text-[#1f1f1f]" />
+      <div className="absolute left-7 top-5 z-20 flex items-center gap-2 sm:left-8">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/favicon.ico"
+          alt="Liquidation Management System"
+          className="h-28 w-28 shrink-0 object-contain"
+        />
       </div>
 
       {/* ---------------- Left: form ---------------- */}
-      <section className="relative z-10 flex min-h-screen w-full items-center px-6 py-24 lg:w-[47%] lg:px-0">
+      <section className="relative z-10 flex min-h-screen w-full items-center px-6 pb-24 pt-40 lg:w-[47%] lg:px-0 lg:py-24">
         <div className="mx-auto w-full max-w-[380px] lg:ml-[22.7%] lg:mr-0 lg:w-[57.5%] lg:min-w-[340px]">
           <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.02em]">
             Welcome Back
@@ -291,7 +295,12 @@ export default function LoginPage() {
       >
         {/* Sidebar */}
         <div className="flex w-[72px] shrink-0 flex-col items-center border-r border-[#f0f0f2] py-5">
-          <Wallet size={24} strokeWidth={1.6} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/favicon.ico"
+            alt=""
+            className="h-11 w-11 shrink-0 object-contain"
+          />
 
           <div className="mt-6 flex flex-col items-center gap-3">
             {navItems.map(({ label, icon: Icon, active }) => (
