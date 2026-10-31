@@ -37,7 +37,6 @@ type SidebarProps = {
 const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Categories", href: "/categories", icon: Folder },
-  { label: "My Profile", href: "/profile", icon: UserRound },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

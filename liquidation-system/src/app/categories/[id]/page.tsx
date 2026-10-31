@@ -65,6 +65,14 @@ const money = (value: number) =>
     currency: "PHP",
   }).format(value || 0);
 
+const inputClass =
+  "w-full rounded-md border border-transparent bg-[#f4f5f6] px-3.5 py-3 text-sm text-[#1f1f1f] outline-none transition placeholder:text-gray-400 focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-100";
+
+const labelClass = "mb-2 block text-[13px] font-medium text-[#1f1f1f]";
+
+const primaryButton =
+  "flex items-center justify-center gap-2 rounded-md bg-[#262626] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50";
+
 export default function CategoryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -279,289 +287,326 @@ export default function CategoryDetailPage() {
 
   const currentBalance = totalIn - totalOut;
 
+  const stats = [
+    {
+      label: "Current Balance",
+      value: money(currentBalance),
+      icon: Wallet,
+      color: "text-[#2f5de8]",
+      bg: "bg-[#e3ebff]",
+      valueColor: "text-[#1f1f1f]",
+    },
+    {
+      label: "Total Cash In",
+      value: money(totalIn),
+      icon: TrendingUp,
+      color: "text-[#3f9e5f]",
+      bg: "bg-[#dff3e5]",
+      valueColor: "text-[#3f9e5f]",
+    },
+    {
+      label: "Total Cash Out",
+      value: money(totalOut),
+      icon: TrendingDown,
+      color: "text-[#e5533d]",
+      bg: "bg-[#fde8e4]",
+      valueColor: "text-[#e5533d]",
+    },
+  ];
+
   return (
     <AppShell
       title={category?.name || "Category"}
       description="Manage liquidation records"
     >
-      <Link
-        href="/categories"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-green-700"
-      >
-        <ArrowLeft size={17} />
-        Back to Categories
-      </Link>
+      <div className="text-[#1f1f1f]">
+        <Link
+          href="/categories"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#6b6f76] transition hover:text-[#1f1f1f]"
+        >
+          <ArrowLeft size={16} />
+          Back to Categories
+        </Link>
 
-      {loading ? (
-        <div className="py-20 text-center">
-          <Loader2 className="mx-auto animate-spin text-green-700" />
-          <p className="mt-3 text-sm text-gray-400">Loading records...</p>
-        </div>
-      ) : error && !category ? (
-        <div className="rounded-xl border bg-white p-8 text-center">
-          <p className="text-sm text-red-600">{error}</p>
-          <button
-            onClick={() => router.push("/categories")}
-            className="mt-4 text-sm font-semibold text-green-700"
-          >
-            Return to Categories
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold">{category?.name}</h2>
-              <p className="mt-2 text-sm text-gray-500">
-                {category?.description || "Liquidation records for this category."}
-              </p>
-            </div>
-
+        {loading ? (
+          <div className="py-24 text-center">
+            <Loader2 className="mx-auto animate-spin text-[#262626]" />
+            <p className="mt-3 text-sm text-[#8b8f96]">Loading records...</p>
+          </div>
+        ) : error && !category ? (
+          <div className="rounded-[20px] border border-[#e7e8ea] bg-white p-10 text-center">
+            <p className="text-sm text-red-600">{error}</p>
             <button
-              onClick={openAddModal}
-              className="flex items-center gap-2 rounded-lg bg-green-700 px-4 py-3 text-sm font-semibold text-white hover:bg-green-800"
+              onClick={() => router.push("/categories")}
+              className="mt-4 text-sm font-semibold hover:underline"
             >
-              <Plus size={18} />
-              Add Record
+              Return to Categories
             </button>
           </div>
-
-          {error && (
-            <p className="mb-5 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </p>
-          )}
-
-          <div className="mb-7 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border bg-white p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Current Balance</p>
-                <Wallet className="text-blue-700" size={21} />
-              </div>
-              <h3 className="mt-4 text-2xl font-bold">
-                {money(currentBalance)}
-              </h3>
-            </div>
-
-            <div className="rounded-xl border bg-white p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Total Cash In</p>
-                <TrendingUp className="text-green-700" size={21} />
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-green-700">
-                {money(totalIn)}
-              </h3>
-            </div>
-
-            <div className="rounded-xl border bg-white p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Total Cash Out</p>
-                <TrendingDown className="text-red-600" size={21} />
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-red-600">
-                {money(totalOut)}
-              </h3>
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <h3 className="text-lg font-bold">Liquidation Records</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {records.length} record{records.length === 1 ? "" : "s"} in this category.
-            </p>
-          </div>
-
-          {records.length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-white py-16 text-center">
-              <Wallet className="mx-auto text-gray-300" size={40} />
-              <h3 className="mt-4 font-bold">No records yet</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Start by adding your first liquidation record.
-              </p>
-              <button
-                onClick={openAddModal}
-                className="mt-5 rounded-lg bg-green-700 px-5 py-3 text-sm font-semibold text-white"
-              >
-                Add First Record
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {[...records].reverse().map((record) => (
-                <TransactionCard
-                  key={record.id}
-                  record={record}
-                  onEdit={() => openEditModal(record)}
-                  onDelete={() => deleteRecord(record.id)}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {modal && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-3 sm:p-5">
-          <div className="flex max-h-[95vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b p-5 sm:p-6">
-              <div>
-                <h3 className="text-lg font-bold">
-                  {editingId ? "Edit Liquidation Record" : "Add Liquidation Record"}
-                </h3>
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter the transaction details and expense classifications.
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-[34px] font-medium leading-tight tracking-[-0.025em] sm:text-[44px]">
+                  {category?.name}
+                </h1>
+                <p className="mt-3 text-[15px] text-[#6b6f76]">
+                  {category?.description || "Liquidation records for this category."}
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={closeModal}
-                aria-label="Close"
-                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"
-              >
-                <X size={21} />
+              <button onClick={openAddModal} className={primaryButton}>
+                <Plus size={18} />
+                Add Record
               </button>
             </div>
 
-            <form
-              id="record-form"
-              onSubmit={saveRecord}
-              className="flex-1 space-y-6 overflow-y-auto p-5 sm:p-6"
-            >
-              <section>
-                <h4 className="mb-4 text-sm font-bold text-gray-800">
-                  Transaction Information
-                </h4>
+            {error && (
+              <p className="mt-6 rounded-md bg-red-50 p-3 text-sm text-red-600">
+                {error}
+              </p>
+            )}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+            {/* Stats */}
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+
+                return (
+                  <div
+                    key={stat.label}
+                    className="min-w-0 rounded-[20px] border border-[#e7e8ea] bg-white p-6"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[15px] text-[#6b6f76]">{stat.label}</p>
+                      <div
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${stat.bg}`}
+                      >
+                        <Icon size={17} className={stat.color} />
+                      </div>
+                    </div>
+
+                    <h3
+                      className={`mt-4 truncate text-[28px] font-semibold tracking-[-0.02em] ${stat.valueColor}`}
+                    >
+                      {stat.value}
+                    </h3>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Records */}
+            <div className="mb-5 mt-12">
+              <h2 className="text-[24px] font-medium tracking-[-0.02em]">
+                Liquidation Records
+              </h2>
+              <p className="mt-1.5 text-sm text-[#8b8f96]">
+                {records.length} record{records.length === 1 ? "" : "s"} in this category.
+              </p>
+            </div>
+
+            {records.length === 0 ? (
+              <div className="border-y border-[#ececef] py-16 text-center">
+                <Wallet className="mx-auto text-[#c9cbd0]" size={40} />
+                <h3 className="mt-4 text-[17px] font-semibold">No records yet</h3>
+                <p className="mt-2 text-sm text-[#6b6f76]">
+                  Start by adding your first liquidation record.
+                </p>
+                <button
+                  onClick={openAddModal}
+                  className={`${primaryButton} mx-auto mt-6`}
+                >
+                  Add First Record
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {[...records].reverse().map((record) => (
+                  <TransactionCard
+                    key={record.id}
+                    record={record}
+                    onEdit={() => openEditModal(record)}
+                    onDelete={() => deleteRecord(record.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Add / edit record modal */}
+        {modal && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-3 sm:p-5">
+            <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-2xl border border-[#ececef] bg-white shadow-[0_24px_60px_-20px_rgba(20,20,40,0.25)]">
+              {/* Modal header */}
+              <div className="flex items-start justify-between gap-4 border-b border-[#f0f0f2] px-6 py-5 sm:px-8">
+                <div>
+                  <h3 className="text-[22px] font-semibold tracking-[-0.02em]">
+                    {editingId ? "Edit Liquidation Record" : "Add Liquidation Record"}
+                  </h3>
+                  <p className="mt-1.5 text-sm text-[#6b6f76]">
+                    Enter the transaction details and expense classifications.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  aria-label="Close"
+                  className="rounded-lg p-1.5 text-[#8b8f96] hover:bg-[#f4f5f6]"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Form: two panes on large screens */}
+              <form
+                id="record-form"
+                onSubmit={saveRecord}
+                className="grid flex-1 gap-x-10 gap-y-8 overflow-y-auto px-6 py-6 sm:px-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+              >
+                {/* Left pane: transaction details */}
+                <div className="space-y-5">
+                  <h4 className="text-[15px] font-semibold">
+                    Transaction Information
+                  </h4>
+
                   <div>
-                    <label className="mb-2 block text-sm font-medium">Date</label>
+                    <label className={labelClass}>Date</label>
                     <input
                       required
                       type="date"
                       value={form.transaction_date}
                       onChange={(e) => updateForm("transaction_date", e.target.value)}
-                      className="w-full rounded-lg border px-3 py-3 text-sm"
+                      className={inputClass}
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium">Particulars</label>
+                    <label className={labelClass}>Particulars</label>
                     <input
                       required
                       value={form.particulars}
                       onChange={(e) => updateForm("particulars", e.target.value)}
                       placeholder="Transaction description"
-                      className="w-full rounded-lg border px-3 py-3 text-sm"
+                      className={inputClass}
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">Out (₱)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.cash_out}
-                      onChange={(e) => updateForm("cash_out", e.target.value)}
-                      className="w-full rounded-lg border px-3 py-3 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium">In (₱)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.cash_in}
-                      onChange={(e) => updateForm("cash_in", e.target.value)}
-                      className="w-full rounded-lg border px-3 py-3 text-sm"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <h4 className="mb-1 text-sm font-bold text-gray-800">
-                  Liquidation Classifications
-                </h4>
-
-                <p className="mb-4 text-xs text-gray-500">
-                  Enter the corresponding amount for each classification. Leave unused fields at zero.
-                </p>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {fields.map((field) => (
-                    <div key={field.key}>
-                      <label className="mb-2 block text-sm font-medium">
-                        {field.label}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-[#fbd9d3] bg-[#fff7f5] p-3.5">
+                      <label className="mb-2 flex items-center gap-2 text-[13px] font-medium">
+                        <span className="h-2 w-2 rounded-full bg-[#e5533d]" />
+                        Out (₱)
                       </label>
-
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-                          ₱
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form[field.key as keyof typeof form]}
-                          onChange={(e) => updateForm(field.key, e.target.value)}
-                          className="w-full rounded-lg border py-3 pl-8 pr-3 text-sm"
-                        />
-                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.cash_out}
+                        onChange={(e) => updateForm("cash_out", e.target.value)}
+                        className="w-full rounded-md border border-transparent bg-white px-3 py-2.5 text-base font-semibold outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100"
+                      />
                     </div>
-                  ))}
+
+                    <div className="rounded-xl border border-[#cfe9d8] bg-[#f4fbf6] p-3.5">
+                      <label className="mb-2 flex items-center gap-2 text-[13px] font-medium">
+                        <span className="h-2 w-2 rounded-full bg-[#5fc17e]" />
+                        In (₱)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.cash_in}
+                        onChange={(e) => updateForm("cash_in", e.target.value)}
+                        className="w-full rounded-md border border-transparent bg-white px-3 py-2.5 text-base font-semibold outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Remarks (Optional)</label>
+                    <textarea
+                      rows={3}
+                      value={form.remarks}
+                      onChange={(e) => updateForm("remarks", e.target.value)}
+                      placeholder="Additional information..."
+                      className={`${inputClass} resize-none`}
+                    />
+                  </div>
                 </div>
-              </section>
 
-              <section>
-                <label className="mb-2 block text-sm font-medium">
-                  Remarks (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  value={form.remarks}
-                  onChange={(e) => updateForm("remarks", e.target.value)}
-                  placeholder="Additional information..."
-                  className="w-full resize-none rounded-lg border px-3 py-3 text-sm"
-                />
-              </section>
+                {/* Right pane: classifications */}
+                <div className="lg:border-l lg:border-[#f0f0f2] lg:pl-10">
+                  <h4 className="text-[15px] font-semibold">
+                    Liquidation Classifications
+                  </h4>
 
-              {error && (
-                <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  {error}
-                </p>
-              )}
-            </form>
+                  <p className="mb-5 mt-1.5 text-[13px] text-[#8b8f96]">
+                    Enter the corresponding amount for each classification. Leave unused fields at zero.
+                  </p>
 
-            <div className="flex justify-end gap-3 border-t p-5 sm:p-6">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="rounded-lg border px-5 py-3 text-sm font-medium"
-              >
-                Cancel
-              </button>
+                  <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+                    {fields.map((field) => (
+                      <div key={field.key}>
+                        <label className={labelClass}>{field.label}</label>
 
-              <button
-                type="submit"
-                form="record-form"
-                disabled={saving}
-                className="flex items-center gap-2 rounded-lg bg-green-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {saving ? (
-                  <Loader2 size={17} className="animate-spin" />
-                ) : (
-                  <Save size={17} />
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[#b5b8be]">
+                            ₱
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form[field.key as keyof typeof form]}
+                            onChange={(e) => updateForm(field.key, e.target.value)}
+                            className={`${inputClass} pl-8`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="rounded-md bg-red-50 p-3 text-sm text-red-600 lg:col-span-2">
+                    {error}
+                  </p>
                 )}
-                {editingId ? "Save Changes" : "Save Record"}
-              </button>
+              </form>
+
+              {/* Modal footer */}
+              <div className="flex justify-end gap-3 border-t border-[#f0f0f2] px-6 py-4 sm:px-8">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded-md border border-[#e7e8ea] px-5 py-3 text-sm font-medium transition hover:bg-[#f7f7f8]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  form="record-form"
+                  disabled={saving}
+                  className={primaryButton}
+                >
+                  {saving ? (
+                    <Loader2 size={17} className="animate-spin" />
+                  ) : (
+                    <Save size={17} />
+                  )}
+                  {editingId ? "Save Changes" : "Save Record"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </AppShell>
   );
 }
